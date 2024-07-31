@@ -1,0 +1,6 @@
+output/
+.gitignore
+.env
+README.md
+.github/
+Dockerfile
