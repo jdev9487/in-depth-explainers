@@ -166,3 +166,5 @@ cython_debug/
 *.log
 *.synctex.gz
 *.pdf
+*.toc
+output/
