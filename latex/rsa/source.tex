@@ -62,6 +62,8 @@
 \newcommand{\Oset}{\varnothing}
 \newcommand{\st}{\ni}
 \newcommand{\wh}{\widehat}
+\let\oldref\ref
+\renewcommand{\ref}[1]{(\oldref{#1})}
 
 \setlength{\topmargin}{-.3 in}
 \setlength{\oddsidemargin}{0in}
@@ -74,10 +76,53 @@
 \maketitle
 
 \tableofcontents
+\pagebreak
 
 \section{Introduction}
 
 \section{Proof of correctness}
+If we have an integer $m$ (think of this as the \textit{message}) which we raise to the power $e$ (this as the \textit{encryption}) and then once again to the power $d$ (this as the \textit{decryption}), we wish to show that this is equal to (modulo some number $n$ which will be defined later) the original $m$: 
+\begin{equation}\label{eqn:statement}
+    (m^e)^d = m^{ed} \equiv m \mod n.
+\end{equation}
+Understood correctly, the original message $m$ is encrypted with the key $e$. It is then decrypted with the key $d$. Exponentiating $m$ with the product of $ed$ returns our original message. This is all done "modulo" some number $n$, so let's first understand a little modular arithmetic.
+\subsection{Modular arithmetic}
+As an example, $13 \equiv 1 \mod 4$. This means that remainder, upon dividing 13 by 4, is 1. Throughout this article, I will often break convention for modular notation and flip between two expressions of this relationship. $13 \equiv 1 \mod 4$ is the same as saying that $13 = 1 + k4$, where $k$ is an integer (in this case, 3). More generally,
+\begin{equation}
+    a \equiv b \mod n \, \Leftrightarrow \, a = b + kn
+\end{equation}
+The advantage of the second formulation is that it is more familiar and many of the rules of modular arithmetic follow more straightforwardly. Let's practice this formulation by checking an often overlooked equality.
+
+\subsubsection{Missing modular reduction?}
+The procedure for encryption and decryption is as follows:
+\begin{enumerate}
+    \item take $m$ and raise to the power of $e$;
+    \item take that result and reduce it modulo $n$ (keep subtracting $n$ until you have a positive integer less than $n$);
+    \item take that result and raise it to the power of $d$;
+    \item reduce modulo $n$;
+    \item the result is $m$.
+\end{enumerate}
+But the original statement we are trying to prove (equation \ref{eqn:statement}) appears to miss out step 2. Let's see:
+\begin{align*}
+    m \xrightarrow{\text{encryption}} &\,m^e \mod n \\
+    =&\,m^e + k_en
+\end{align*}
+Once exponentiated \textit{and} reduced modulo $n$, it is then exponentiated:
+\begin{align*}
+    m^e + k_en \xrightarrow{\text{decryption}} &\,(m^e + k_en)^d \\
+    =&\,m^{ed} + \sum_{i=1}^{d}\binom{d}{i} m^{e(d-1)}(k_en)^i \\
+    =&\,m^{ed} + n\sum_{i=1}^{d}\binom{d}{i} m^{e(d-1)}k_e^in^{i-1}.
+\end{align*}
+A little ugly perhaps, but notice the final form: $m^{ed} + n(...)$. We can re-write this into conventional modular form
+\begin{equation*}
+    m^{ed} + n\sum_{i=1}^{d}\binom{d}{i} m^{e(d-1)}k_e^in^{i-1} = m^{ed} \mod n
+\end{equation*}
+since the final term is divisible by $n$. \ref{eqn:statement} would be more clearly connected to the algorithm if it were written:
+\begin{equation*}
+    (m^e + k_en)^d \equiv m \mod n,
+\end{equation*}
+but the above work shows this to be unnecessary.
+
 \subsection{Fermat's little theorem}
 
 \section{Security}
