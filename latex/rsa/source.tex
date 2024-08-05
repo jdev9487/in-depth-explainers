@@ -25,6 +25,7 @@
 \newtheorem*{soln}{Solution}
 \newtheorem{prop}{Proposition}
 
+\renewcommand{\sec}[1]{\S \ref{#1}}
 \newcommand{\lra}{\longrightarrow}
 \newcommand{\ra}{\rightarrow}
 \newcommand{\surj}{\twoheadrightarrow}
@@ -80,8 +81,19 @@
 
 \section{Introduction}
 
-\section{Proof of correctness}
-If we have an integer $m$ (think of this as the \textit{message}) which we raise to the power $e$ (this as the \textit{encryption}) and then once again to the power $d$ (this as the \textit{decryption}), we wish to show that this is equal to (modulo some number $n$ which will be defined later) the original $m$: 
+\section{Public key cryptography}\label{sec:pkc}
+Alice wishes to send a message to Bob. She wishes to keep this message a secret that only Bob can read. Charlie is waiting to intercept any message for his own, malicious, purposes. How can we implement a framework that keeps the message out of Charlie's hands? There a few different ways to achieve this but we will focus here on a solution known as public-key cryptography.
+\subsection{Public key-private key pair}
+Every `user' (Alice, Bob and Charlie) all have a pair of `keys'; one that is public (everyone else has access to it) and the other is private (only accessible to the user that holds it). Without saying why this is the case (c.f. \sec{sec:poc}), messages encrypted with the private key can \textit{only} be decrypted with the public key. Likewise, messages encrypted with the public key can \textit{only} be decrypted with the public key. So, how can Alice send a private message to Bob without Charlie interfering?
+\subsubsection{Secrecy}
+Alice needs her message to be read \textit{only} by Bob. She can do this by encrypting her message with Bob's public key. Remember, \textit{everyone} has access to \textit{anyone's} public key. Once encrypted with Bob's public key, only Bob's private key can decrypt it. Given that only Bob has access to his private key, only Bob can read this message. Secrecy achieved.
+\subsubsection{Authenticity}
+Alice wishes to send some instructions to Bob: ``Please send \$100 to my bank account. From Alice". How can Bob be sure that Alice sent this message? What is stopping Charlie sending Bob the same message? Alice needs a way to convince Bob that she is the one who sent the message. She can achieve this by encrypting the message with her private key. The only way the message can be decrypted is with Alice's public key. Bob needs only to decrypt the message with Alice's public key. Anyone can do this, but no one can act as an imposter for Alice. Authenticity achieved.
+\subsection{Use}
+The most common usage of RSA is the authenticity aspect used for `signing' certificates in Transport Layer Security (TLS). When visiting a website using `https', the server has a certificate that is used to identify them and 'prove' that they are who they say they are. Their certificate is `signed' with their private key. During the TLS handshake, the signature is decrypted with the server's public key (which any browser has access to). If this operation succeeds, the browser can be sure that the server is who the server is claiming to be.
+
+\section{Proof of correctness}\label{sec:poc}
+Now, that we have given some motivation for public-key cryptography, let us dive into how encryption and decryption take place mathematically. The message is represented by an integer $m$. Encryption and decryption `keys' are represented with exponents $e$ and $d$ respectively (note, from before, there is a symmetry between these exponents; encryption with $e$ or $d$ can only be decrypted with $d$ or $e$ respectively). If we raise $m$ to the power $e$ and then once again to the power $d$, we wish to show that this is equal to (modulo some number $n$ which will be defined later) the original $m$: 
 \begin{equation}\label{eqn:statement}
     (m^e)^d = m^{ed} \equiv m \mod n.
 \end{equation}
@@ -123,7 +135,139 @@ since the final term is divisible by $n$. \ref{eqn:statement} would be more clea
 \end{equation*}
 but the above work shows this to be unnecessary.
 
-\subsection{Fermat's little theorem}
+\subsection{Outline of a proof}
+By ``proving" RSA, I really mean showing that equation \ref{eqn:statement} holds i.e. does raising $m$ to the power of $ed$ really produce a number that is some multiple of $n$ more that $m$. So far $e$, $d$, and $m$ have remained unexplained; they are, however, central to how RSA provides it security in encryption so let's include them now. The proof goes something like this:
+\begin{enumerate}
+    \item Choose $n$ such that $n$ is the product of two distinct primes $p$ and $q$.
+    \item Let $e$ and $d$ be \textit{modular multiplicative inverses} of one another with respect to the modulus \textit{totient function} of $n$ i.e. $e\cdot d \equiv 1 \mod \phi(n)$.
+    \item Use point 2 to show that $m^{ed} \equiv m \mod p$.
+    \item Repeat for $q$.
+    \item Infer that since it holds for both $p$ and $q$, it must hold for $n$.
+\end{enumerate}
+Plenty of detail is missing from this outline but that is the essence of it. Before getting into the weeds of the proof, it's important to clarify a few definitions.
+\subsubsection{Euler's totient function $\phi(n)$}
+Most explanations of the proof of correctness for RSA introduce $e$ and $d$ as multiplicative inverses with respect to modulus $\phi(n)$, Euler's totient function. What is actually important in the proof is that the are inverses with respect to the modulus $(p-1)(q-1)$. The totient function $\phi(n)$ counts how many positive integers up to $n$ are relatively prime to $n$. Take $\phi(11)$; this will be every integer from 1 to 10, since 11 is prime. For any prime number $n$, $\phi(n) = n-1$. One property of the totient function is that it is multiplicative i.e. $\phi(AB) = \phi(A)\phi(B)$ so long as $A$ and $B$ are co-prime (share no prime factors). In our example, $p$ and $q$ are indeed co-prime since they are prime themselves. This means that $\phi(n)=\phi(p\cdot q)=(p-1)(q-1)$.
+
+\subsubsection{Fermat's little theorem}
+At the heart of this proof is Fermat's little (not his last!) theorem:
+\begin{thm}\label{thm:fermat}
+    For any prime $p$ and positive integer $a$, $a^p \equiv a \mod p$.
+\end{thm}
+The proof of this will come shortly but let's see why we even need it; this is the heart of the proof:
+\begin{align}
+m^{ed}&=m^{ed-1}\cdot m \\
+      &=m^{k\phi(n)}\cdot m  \\
+      &=m^{k(p-1)(q-1)}\cdot m  \\
+      &=m^{k_p(p-1)}\cdot m  \\
+      &=\left(m^{(p-1)}\right)^{k_p}\cdot m . \label{line:fermat}
+\end{align}
+We can see that we have something approaching the form in Fermat's little theorem in the brackets of line \ref{line:fermat}. If the quantity inside the brackets evaluated to 1 then we would be in business. This is indeed the case but we need show Fermat's little theorem to be true before we can get to what is a special case. Let's prove theorem \ref{thm:fermat}:
+\begin{proof}
+    We proceed by induction. Base case ($a=1$): $1^p = 1$; done. We now need the inductive step. Assume that $k^p \equiv 1 \mod p$ and evaluate $(k+1)^p$:
+    \begin{align*}
+        (k + 1)^p &=k^p + \left[\sum_{i=1}^{p-1} \binom{p}{i}k^{p-i}\right] + 1 \\
+                  &=k^p + 1 + \left[\sum_{i=1}^{p-1} \frac{p!}{(p-i)!\cdot i!}k^{p-i}\right]
+    \end{align*}
+    The binomial coefficient is always an integer. Since $p$ is prime, we can safely say that there is no factor of $p$ in the denominator. Since it is only in the numerator it can be factored out leaving an integer $N$ in its place:
+    \begin{align*}
+        (k + 1)^p &=k^p + 1 + p\left[\sum_{i=1}^{p-1} \frac{(p-1)!}{(p-i)!\cdot i!}k^{p-i}\right] \\
+                  &=k^p + 1 + p \cdot N \\
+                  &\equiv k^p + 1 \mod p \\
+                  &\equiv k + 1 \mod p\qquad \textrm{(assumption)}
+    \end{align*}
+    Hence, $a^p \equiv a \mod p$.
+\end{proof}
+Line \ref{line:fermat} has $p-1$ in the exponent. Fermat's little theorem has only $p$ in the exponent. It would be nice if we could ``divide" both sides by a giving a potential special case of the equality:
+\begin{equation}\label{eqn:fermat-special}
+    a^{p-1} \overset{?}{\equiv} 1 \mod p.
+\end{equation}
+It turns out that we can remove the `?' from above \textit{if} we add the restriction that $\gcd(a, p) = 1$ i.e. $a$ and $p$ are co-prime. Why is this?
+\subsubsection{Modular division}
+Suppose we have the relation
+\begin{equation}
+    sa \equiv ta \mod b
+\end{equation}
+where $s$ and $t$ are integers. It is tempting to ``cancel'' $a$ and be left with $s \equiv t \mod b$. We shall, however, prove the following:
+\begin{thm}
+    $sa \equiv ta \mod b \, \implies \, s \equiv t \mod b$, if $\gcd(a,b) = 1$.
+\end{thm}
+\begin{proof}
+    If $\gcd(a,b) \neq 1$, this implies we can write $b = ra$ for some integer $r$. Now we have
+    \begin{align*}
+        sa \equiv ta \mod b & \implies sa - ta = kb \\
+        & \implies sa - ta = kra \\
+        & \implies s - t = kr \\
+        & \implies s \equiv t \mod r.
+    \end{align*}
+    The best we can say is that $s$ and $t$ are equivalent with respect to $r=\frac{b}{a}$, but not $b$. Now, if $\gcd(a, b) = 1$, then $b\neq ra$ and we have:
+    \begin{align*}
+        sa \equiv ta \mod b & \implies sa - ta = kb \\
+        & \implies a(s-t) = kb \\
+        & \implies a(s-t) = lab \\
+        & \implies s - t = lb \\
+        & \implies s \equiv t \mod b,
+    \end{align*}
+    where we have introduced $k=la$; this relation must hold since the LHS is clearly divisible by $a$, hence the RHS must also be. But, by definition, $a\nmid b$ so to make the equality hold $a\mid k \implies k=la$. This concludes the proof.
+\end{proof}
+\subsection{A proof}
+We are almost in a position to prove \ref{eqn:statement}. We first need a small bit of logic to help us:
+\begin{cor}\label{cor:crt}
+    If $m^{ed} \equiv m \mod p$ and $m^{ed} \equiv m \mod q$ then it holds that $m^{ed} \equiv m \mod n$.
+\end{cor}
+\begin{proof}
+    \begin{equation}
+        m^{ed} \equiv m \mod p \implies p \mid m^{ed} - m
+    \end{equation}
+    This shows that $p$ is a prime factor of $m^{ed} - m$. Identical reasoning shows that $q$ is also a prime factor of $m^{ed} - m$. If both $p$ and $q$ are prime factors of $m^{ed} - m$, then it must be the case the $pq$ is a factor of $m^{ed} - m$ and hence $m^{ed} - m = kn \implies m^{ed} \equiv m \mod n$.
+\end{proof}
+We can now proceed to prove \ref{eqn:statement} by proving $m^{ed} \equiv m \mod p$.
+\begin{thm}
+For $n = pq$ with $p$ and $q$ prime, $m^{ed} \equiv m \mod n$ where $ed \equiv 1 \mod \phi(n)$.
+\end{thm}
+\begin{proof}
+    First, consider the case where $\gcd(m,p) \neq 1$. This implies that $m$ is a multiple of $p$:
+    \begin{align*}
+        m^{ed} &=(rp)^{ed} \\
+        &\equiv 0 \mod p \\
+        &\equiv 0 \mod p \\
+        &\equiv rp \mod p \\
+        &\equiv m \mod p.
+    \end{align*}
+    Second, consider the case where $\gcd(m,p)=1$. 
+    \begin{equation}\label{eqn:rsa-first}
+        m^{ed} = m^{ed-1}m
+    \end{equation}
+    Recalling the fact that $e$ and $d$ are multiplicative inverses of each other with respect to the modulus $\phi(n)$, we can write the relationship between $e$ and $d$ in the following way:
+    \begin{align*}
+        ed &\equiv 1 \mod \phi(n) \\
+        ed &=1 + k\phi(n) \\
+        ed - 1 &= k\phi(n) \\
+        ed - 1 &= k(p-1)(q-1) \\
+        ed - 1 &= k_p(p-1) = k_q(q-1)
+    \end{align*}
+    where in the last line I have introduced two different variables $k_p = k(q-1)$ and $k_q=k(p-1)$. What's important is that they are constants. We can now substitute this new form into equation \ref{eqn:rsa-first}:
+    \begin{align*}
+        m^{ed} &= m^{k_p(p-1)}m \\
+        m^{ed} &= \left(m^{(p-1)}\right)^{k_p}m.
+    \end{align*}
+    We now employ the special case of Fermat's little theorem \ref{eqn:fermat-special}:
+    \begin{align*}
+        m^{ed} &= (1)^{k_p}m \mod p \\
+        m^{ed} &\equiv m \mod p.
+    \end{align*}
+    $m^{ed}$ is equivalent to $m$ with respect to modulus $p$. Identical reasoning shows that $m^{ed}$ is equivalent to $m$ with respect to modulus $q$. Using corollary \ref{cor:crt}, this implies that $m^{ed} \equiv m \mod n$.
+\end{proof}
+\subsection{Implications}
+We have shown that if we start with any integer $m$ and apply the following steps:
+\begin{enumerate}
+    \item raise to the power of $e$;
+    \item reduce modulo $n$;
+    \item raise to the power of $d$; and
+    \item reduce modulo $n$,
+\end{enumerate}
+we will recover the original $m$. It is important to note that $e$ and $d$ are essentially interchangeable. Messages encrypted with $e$ can only be decrypted with $d$. But the reverse is also true; messages encrypted with $d$ can only be decrypted with $e$. The fact that these keys function as encryption-decryption pairs is crucial to public key cryptography c.f. \sec{sec:pkc}.
+
+This entire proof is a proof that we will recover the original $m$ after these steps have been taken. This is very important but is not, on its own, enough to show that this algorithm can safely encrypt messages. Remember that once the message $m$ is encrypted into $m^e \mod n$, only the decrypting key $d$ should be able to produce the original message $m$. The preceding proof shows that $d$ does do the job. It does not, however, show that $d$ cannot be `guessed' or worked out easily. If decryption can be hacked then the whole algorithm, regardless of its elegance, is worthless.
 
 \section{Security}
 
