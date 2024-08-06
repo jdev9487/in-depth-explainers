@@ -90,7 +90,7 @@ Alice needs her message to be read \textit{only} by Bob. She can do this by encr
 \subsubsection{Authenticity}
 Alice wishes to send some instructions to Bob: ``Please send \$100 to my bank account. From Alice". How can Bob be sure that Alice sent this message? What is stopping Charlie sending Bob the same message? Alice needs a way to convince Bob that she is the one who sent the message. She can achieve this by encrypting the message with her private key. The only way the message can be decrypted is with Alice's public key. Bob needs only to decrypt the message with Alice's public key. Anyone can do this, but no one can act as an imposter for Alice. Authenticity achieved.
 \subsection{Use}
-The most common usage of RSA is the authenticity aspect used for `signing' certificates in Transport Layer Security (TLS). When visiting a website using `https', the server has a certificate that is used to identify them and 'prove' that they are who they say they are. Their certificate is `signed' with their private key. During the TLS handshake, the signature is decrypted with the server's public key (which any browser has access to). If this operation succeeds, the browser can be sure that the server is who the server is claiming to be.
+The most common usage of RSA is the authenticity aspect used for `signing' certificates in Transport Layer Security (TLS). When visiting a website using `https', the server has a certificate that is used to identify them and `prove' that they are who they say they are. Their certificate is `signed' with their private key. During the TLS handshake, the signature is decrypted with the server's public key (which any browser has access to). If this operation succeeds, the browser can be sure that the server is who the server is claiming to be.
 
 \section{Proof of correctness}\label{sec:poc}
 Now, that we have given some motivation for public-key cryptography, let us dive into how encryption and decryption take place mathematically. The message is represented by an integer $m$. Encryption and decryption `keys' are represented with exponents $e$ and $d$ respectively (note, from before, there is a symmetry between these exponents; encryption with $e$ or $d$ can only be decrypted with $d$ or $e$ respectively). If we raise $m$ to the power $e$ and then once again to the power $d$, we wish to show that this is equal to (modulo some number $n$ which will be defined later) the original $m$: 
@@ -146,14 +146,14 @@ By ``proving" RSA, I really mean showing that equation \ref{eqn:statement} holds
 \end{enumerate}
 Plenty of detail is missing from this outline but that is the essence of it. Before getting into the weeds of the proof, it's important to clarify a few definitions.
 \subsubsection{Euler's totient function $\phi(n)$}
-Most explanations of the proof of correctness for RSA introduce $e$ and $d$ as multiplicative inverses with respect to modulus $\phi(n)$, Euler's totient function. What is actually important in the proof is that the are inverses with respect to the modulus $(p-1)(q-1)$. The totient function $\phi(n)$ counts how many positive integers up to $n$ are relatively prime to $n$. Take $\phi(11)$; this will be every integer from 1 to 10, since 11 is prime. For any prime number $n$, $\phi(n) = n-1$. One property of the totient function is that it is multiplicative i.e. $\phi(AB) = \phi(A)\phi(B)$ so long as $A$ and $B$ are co-prime (share no prime factors). In our example, $p$ and $q$ are indeed co-prime since they are prime themselves. This means that $\phi(n)=\phi(p\cdot q)=(p-1)(q-1)$.
+Most explanations of the proof of correctness for RSA introduce $e$ and $d$ as multiplicative inverses with respect to modulus $\phi(n)$, Euler's totient function \footnote{It is actually often given in terms of \textit{Carmichael's} totient function: $\lambda(n)$. I won't explain here, but for prime $n$, $\phi(n) = \lambda(n)$}. What is actually important in the proof is that the are inverses with respect to the modulus $(p-1)(q-1)$. The totient function $\phi(n)$ counts how many positive integers up to $n$ are relatively prime to $n$. Take $\phi(11)$; this will be every integer from 1 to 10, since 11 is prime. For any prime number $n$, $\phi(n) = n-1$. One property of the totient function is that it is multiplicative i.e. $\phi(AB) = \phi(A)\phi(B)$ so long as $A$ and $B$ are co-prime (share no prime factors). In our example, $p$ and $q$ are indeed co-prime since they are prime themselves. This means that $\phi(n)=\phi(p\cdot q)=(p-1)(q-1)$.
 
 \subsubsection{Fermat's little theorem}
 At the heart of this proof is Fermat's little (not his last!) theorem:
 \begin{thm}\label{thm:fermat}
     For any prime $p$ and positive integer $a$, $a^p \equiv a \mod p$.
 \end{thm}
-The proof of this will come shortly but let's see why we even need it; this is the heart of the proof:
+The proof of this will come shortly but let's see why we even need it; this is at the heart of the proof of correctness:
 \begin{align}
 m^{ed}&=m^{ed-1}\cdot m \\
       &=m^{k\phi(n)}\cdot m  \\
@@ -270,6 +270,8 @@ we will recover the original $m$. It is important to note that $e$ and $d$ are e
 This entire proof is a proof that we will recover the original $m$ after these steps have been taken. This is very important but is not, on its own, enough to show that this algorithm can safely encrypt messages. Remember that once the message $m$ is encrypted into $m^e \mod n$, only the decrypting key $d$ should be able to produce the original message $m$. The preceding proof shows that $d$ does do the job. It does not, however, show that $d$ cannot be `guessed' or worked out easily. If decryption can be hacked then the whole algorithm, regardless of its elegance, is worthless.
 
 \section{Security}
+
+\section{Key generation}
 
 \section{Conclusion}
 
