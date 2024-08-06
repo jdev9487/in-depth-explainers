@@ -80,6 +80,34 @@
 \pagebreak
 
 \section{Introduction}
+Rivest-Shamir-Adleman, or RSA, is an example of a public-key cryptosystem. Understanding such a system requires understanding the basics of an alternative system first: \textit{symmetric}-key algorithms. These systems have one key that is used for both encryption and decryption. One such, ubiquitous, example of a symmetric-key algorithm is AES - Advanced Encryption Standard. Symmetric-key procedures involve two parties, wishing to securely transfer messages to one another, having the same key\footnote{Key exchange is a topic in its own right and is employed by most browsers when exchanging data with a server e.g. Diffie-Hellman key exchange.}. But what about scenarios where it is implausible to share keys or (a common requirement) the identity of one party needs to be verified?
+
+Public key cryptography circumvents the needs for key sharing by employing key \textit{pairs}: one for encryption and the other for decryption. In such a system, encryption keys are made public and decryption keys are kept private. As a result, any party can encrypt a message but only the holder of the private key partner can decrypt it\footnote{In practice, both keys in the pair can be used for both encryption and decryption; encrypting with the private key is common place and used to verify identities of servers during a TLS handshake.}.
+
+But what is a `key' in this sense and what does it mean to encrypt/decrypt? At the heart of RSA is an equation detailing these terms:
+\begin{equation}\label{eqn:declaration}
+    m^{ed} \equiv m \mod n.
+\end{equation}
+$m$ here is the message we wish to encrypt. Any message written as a string of characters can be converted into a string of unicode representations, which can then be converted into a large integer e.g. the string ``Hello, world!" becomes the string of integers ``72 101 108 108 111 44 32 119 111 114 108 100 33", which then becomes the binary string:
+\begin{align*}
+    &0100100001100101011011000110110001101111001011000010 \\
+    &0000011101110110111101110010011011000110010000100001,
+\end{align*}
+which finally becomes\footnote{Actual RSA algorithms do one more step here: padding c.f. \sec{sec:gen-pad}.} the decimal number $m=5735816763073854953388147237921$.
+
+So we have converted our message into a number. But what about the symbols $e$ and $d$? These are our encryption/decryption \textit{keys}. First encryption. This means that we raise our $m$ to the power of another number, $e$:
+\begin{equation}
+    m\xrightarrow{\text{encryption}}m^e.
+\end{equation}
+Now we have changed the original message, $m$, into another number, $m^e$. To decrypt, we do an almost identical procedure, just with a different exponent, $d$:
+\begin{equation}
+    m^e\xrightarrow{\text{decryption}}m^{ed}.
+\end{equation}
+The astute among you will have noticed that our decrypted number is not the same as our initial message $m$. This brings us to the last symbol in \ref{eqn:declaration}: mod $n$. All of the previous steps are done ``modulo $n$''. This means that if we end up with a number larger than $n$, we start taking away $n$ from the number until we get a number smaller than $n$ (more on this later c.f. \sec{sec:mod-ari}).
+
+But what is $n$? I will leave this until \sec{sec:poc} but for now it is worth explaining what constitutes the public (encryption) and private (decryption) keys. The public key is the combination of $e$ and $n$. The private key is $d$. If an `attacker' can work out $d$ from the combination of $e$ and $n$ then they have `cracked RSA' (not an easy task to put it mildly!). Choosing these values correctly is of vital importance to ensure the security of the algorithm, but if done with care, RSA is an \textit{extremely} secure method of encryption.
+
+The rest of this document is devoted to the mathematics behind this algorithm. I think it's fair to say that I assume a mathematical background but I do my best to dive into `all' areas that `need' explaining. As an example of the level I'm pitching at, it will be necessary for us to understand Fermat's little theorem. In order to do this I will assume the reader has seen `proof by induction' and the `binomial expansion' before but I will explain how modular division can be used to get the special case we need for RSA. The best description of the level of detail given is this: if I needed to understand it, I included it!. Whether or not that is helpful is something you will most likely find out reading on.
 
 \section{Public key cryptography}\label{sec:pkc}
 Alice wishes to send a message to Bob. She wishes to keep this message a secret that only Bob can read. Charlie is waiting to intercept any message for his own, malicious, purposes. How can we implement a framework that keeps the message out of Charlie's hands? There a few different ways to achieve this but we will focus here on a solution known as public-key cryptography.
@@ -98,7 +126,7 @@ Now, that we have given some motivation for public-key cryptography, let us dive
     (m^e)^d = m^{ed} \equiv m \mod n.
 \end{equation}
 Understood correctly, the original message $m$ is encrypted with the key $e$. It is then decrypted with the key $d$. Exponentiating $m$ with the product of $ed$ returns our original message. This is all done "modulo" some number $n$, so let's first understand a little modular arithmetic.
-\subsection{Modular arithmetic}
+\subsection{Modular arithmetic}\label{sec:mod-ari}
 As an example, $13 \equiv 1 \mod 4$. This means that remainder, upon dividing 13 by 4, is 1. Throughout this article, I will often break convention for modular notation and flip between two expressions of this relationship. $13 \equiv 1 \mod 4$ is the same as saying that $13 = 1 + k4$, where $k$ is an integer (in this case, 3). More generally,
 \begin{equation}
     a \equiv b \mod n \, \Leftrightarrow \, a = b + kn
@@ -250,7 +278,7 @@ For $n = pq$ with $p$ and $q$ prime, $m^{ed} \equiv m \mod n$ where $ed \equiv 1
         m^{ed} &= m^{k_p(p-1)}m \\
         m^{ed} &= \left(m^{(p-1)}\right)^{k_p}m.
     \end{align*}
-    We now employ the special case of Fermat's little theorem \ref{eqn:fermat-special}:
+    Since we are specifically dealing with the case where $\gcd(m, p)=1$, we now employ the special case of Fermat's little theorem \ref{eqn:fermat-special}:
     \begin{align*}
         m^{ed} &= (1)^{k_p}m \mod p \\
         m^{ed} &\equiv m \mod p.
@@ -271,7 +299,7 @@ This entire proof is a proof that we will recover the original $m$ after these s
 
 \section{Security}
 
-\section{Key generation}
+\section{Key generation and padding}\label{sec:gen-pad}
 
 \section{Conclusion}
 
