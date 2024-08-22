@@ -103,9 +103,9 @@ Now we have changed the original message, $m$, into another number, $m^e$. To de
 \begin{equation}
     m^e\xrightarrow{\text{decryption}}m^{ed}.
 \end{equation}
-The astute among you will have noticed that our decrypted number is not the same as our initial message $m$. This brings us to the last symbol in \ref{eqn:declaration}: mod $n$. All of the previous steps are done ``modulo $n$''. This means that if we end up with a number larger than $n$, we start taking away $n$ from the number until we get a number smaller than $n$ (more on this later c.f. \sec{sec:mod-ari}).
+The astute among you will have noticed that our decrypted number $m^{ed}$ is not the same as our initial message $m$. This brings us to the last symbol in \ref{eqn:declaration}: mod $n$. All of the previous steps are done ``modulo $n$''. This means that if we end up with a number larger than $n$, we start taking away $n$ from the number until we get a number smaller than $n$ (more on this later c.f. \sec{sec:mod-ari}).
 
-But what is $n$? I will leave this until \sec{sec:poc} but for now it is worth explaining what constitutes the public (encryption) and private (decryption) keys. The public key is the combination of $e$ and $n$. The private key is $d$. If an `attacker' can work out $d$ from the combination of $e$ and $n$ then they have `cracked RSA' (not an easy task to put it mildly!). Choosing these values correctly is of vital importance to ensure the security of the algorithm, but if done with care, RSA is an \textit{extremely} secure method of encryption.
+But what is $n$? I will leave this until \sec{sec:poc} but for now it is worth explaining what constitutes the public (encryption) and private (decryption) keys. The public key is the combination of $e$ and $n$. The private key is the combination of  $d$ and $n$. If an `attacker' can work out $d$ from the combination of $e$ and $n$ then they have `cracked RSA' (not an easy task to put it mildly!). Choosing these values correctly is of vital importance to ensure the security of the algorithm, but if done with care, RSA is an \textit{extremely} secure method of encryption.
 
 The rest of this document is devoted to the mathematics behind this algorithm. I think it's fair to say that I assume a mathematical background but I do my best to dive into `all' areas that `need' explaining. As an example of the level I'm pitching at, it will be necessary for us to understand Fermat's little theorem. In order to do this I will assume the reader has seen `proof by induction' and the `binomial expansion' before but I will explain how modular division can be used to get the special case we need for RSA. The best description of the level of detail given is this: if I needed to understand it, I included it!. Whether or not that is helpful is something you will most likely find out reading on.
 
@@ -297,9 +297,103 @@ we will recover the original $m$. It is important to note that $e$ and $d$ are e
 
 This entire proof is a proof that we will recover the original $m$ after these steps have been taken. This is very important but is not, on its own, enough to show that this algorithm can safely encrypt messages. Remember that once the message $m$ is encrypted into $m^e \mod n$, only the decrypting key $d$ should be able to produce the original message $m$. The preceding proof shows that $d$ does do the job. It does not, however, show that $d$ cannot be `guessed' or worked out easily. If decryption can be hacked then the whole algorithm, regardless of its elegance, is worthless.
 
-\section{Security}
-
 \section{Key generation and padding}\label{sec:gen-pad}
+When it actually comes down to encrypting with keys, three quantities must be known: $e$, $d$ and $n$. As mentioned previously, $e$ and $n$ form one key (remember from \sec{sec:poc} that both keys are symmetric - either can encrypt so long as the \textit{other} decrypts) and $d$ and $n$ form the other key. These three quantities are related via
+\begin{equation}\label{equ:edn}
+    e\cdot d \equiv 1 \mod \phi(n).
+\end{equation}
+Discussion up to this point has merely stated the existence of and $e$ and $d$ that satisfy \ref{equ:edn}, but it is not straightforward that two quantities should exist at all. $e$ and $d$ are called multiplicative inverses of one another and only exist if $\gcd(e,n)=\gcd(d,n)=1$. In most situations, $e$ is chosen such that it is relatively prime to $\phi(n)$ \footnote{A common way to achieve this is to ensure $e$ is a prime itself - 65537 is often used.} and then $d$ is computed using the Extended Euclidean Algorithm.
+\subsection{Extended Euclidean Algorithm (EEA)}
+The EEA is composed of two procedures: the Euclidean Algorithm to find the greatest common divisor of two numbers; and back-substitution to express the $\gcd$ as a linear combination of the two numbers. As an example, we wish to express the greatest common divisor of 58 and 24 as a linear combination of 58 and 24:
+\begin{align*}
+    (24,58)&\xrightarrow{\text{Euclidean Algorithm}}\gcd(24, 58)=2 \\
+    2&\xrightarrow{\text{Extended Euclidean Algorithm}}2 = 24(-12) + 58(5).
+\end{align*}
+This becomes useful in our scenario when $\gcd(e,\phi(n)) = 1$. Then, 1 can be expressed as a linear combination of $e$ and $\phi(n)$ (with coefficients chosen carefully):
+\begin{align*}
+    1 &= d e + k \phi(n) \\
+    1 &\equiv d e \mod \phi(n).
+\end{align*}
+Clearly, $d$ is the value we are after. So, how does the EEA do this?
+\subsubsection{Euclidean Algorithm}
+Let's take 58 and 24 as an example. We first wish to find the greatest common divisor of 58 and 24. Our first step is to divide 58 by 24:
+\[
+    58 = 24(2) + 10.
+\]
+We now `shift' the divisor and remainder one to the left and divide again:
+\[
+    24 = 10(2) + 4.
+\]
+Continue until the remainder is zero:
+\begin{align*}
+    10 &= 4(2) + 2 \\
+    4 &= 2(2) + 0.
+\end{align*}
+The final non-zero remainder is the greatest common divisor: $\gcd(58,24) = 2$.
+\begin{thm}
+    The algorithm detailed above produces the greatest common divisor for the two inputs $r_0$ and $r_1$.
+\end{thm}
+\begin{proof}
+    First, we show that the final non-zero remainder is \textit{a} common divisor of $r_0$ and $r_1$. Second, we show that this is greater than or equal to \textit{any} common divisor and is hence the greatest common divisor.
+    
+    The procedure takes on the following form:
+    \begin{align}
+        r_0 &= r_1 \cdot q_2 + r_2 \label{eqn:ea-first} \\
+        r_1 &= r_2 \cdot q_3 + r_3 \label{eqn:ea-second} \\
+        &\vdots \nonumber\\
+        r_k &= r_{k+1} \cdot q_{k+2} + r_{k+2} \label{eqn:ea-recursion}\\
+        &\vdots \nonumber\\
+        r_{n-2} &= r_{n-1} \cdot q_n + r_n \label{equ:ea-penul} \\
+        r_{n-1} &= r_n \cdot q_{n+1} \label{equ:ea-final}
+    \end{align}
+    Note that the $r_n$ values will always be decreasing since the remainder of a division operation is always less than the divisor. During the `shift' operation the remainder becomes the subsequent divisor and hence the subsequent remainder will be less as well. This proves that we will eventually reach a situation where the remainder is 0.
+
+    To prove that $r_n$, the final non-zero remainder, is a common divisor to $r_0$ and $r_1$ we will show that if $r_n\mid r_{k+2}$ and $r_n\mid r_{k+1}$ then $r_n \mid r_k$. In fact, \ref{eqn:ea-recursion} shows this. This recursion relation then allows us to show that $r_n \mid r_1$ and $r_n \mid r_0$ if we can find \textit{two} base cases. \ref{equ:ea-final} shows $r_n \mid r_{n-1}$ and the combination of \ref{equ:ea-penul} and \ref{equ:ea-final} shows $r_n \mid r_{n-2}$. Hence $r_n \mid r_1$ and $r_n \mid r_0$ so is \textit{a} common divisor to $r_1$ and $r_2$.
+
+    We now need to show that $r_n$ is the \textit{greatest} common divisor. We proceed by working with \textit{any} common divisor, say $g$:
+    \begin{equation}
+        r_0 = k_0 g \quad, \quad r_1 = k_1g.
+    \end{equation}
+    In a similar manner to before, \ref{eqn:ea-recursion} can be used to show that if $g \mid r_k$ and $g \mid r_{k+1}$ then $g \mid r_{k+2}$. \ref{eqn:ea-first} and \ref{eqn:ea-second} show the base cases and hence we can say that our arbitrary common divisor of $r_0$ and $r_1$, $g$, must divide $r_n$.
+
+    We have shown that \textit{any} common divisor must divide $r_n$. We have also shown that $r_n$ is a common divisor of $r_0$ and $r_1$. These two results prove that $r_n$ is the greatest of all the common divisors; $\gcd(r_0, r_1) = r_n$.
+\end{proof}
+
+\subsubsection{Extended Euclidean Algorithm}
+We can now find the greatest common divisor of two numbers. Of particular importance to RSA is the situation when the greatest common divisor is 1 i.e. they are \textit{coprime}. Our two keys satisfy the relation
+\begin{equation}\label{eqn:mul-inv}
+    e\cdot d \equiv 1 \mod \phi(n).
+\end{equation}
+Such a relationship is only possible if $e$ (and consequently $d$) are coprime to $\phi(n)$. So we know that the Euclidean Algorithm would find $1$ and the greatest common divisor. 
+
+The Extended Euclidean Algorithm takes this and expresses the greatest common divisor and a linear combination of the two numbers we started with. This process of back substitution is best shown with an example. Let's take $n = p\cdot q = 7\cdot11 = 77$ giving $\phi(n) = 6\cdot 10 = 60$. We now need an $e$ which is coprime to 60, say $e = 13$. We now wish to find $d$ the satisfies \ref{eqn:mul-inv}. Let's start off with $r_0 = 60$ and $r_1 = 13$:
+\begin{align*}
+    60 &= 13(4) + 8 \\
+    13 &= 8(1) + 5 \\
+    8  &= 5(1) + 3 \\
+    5  &= 3(1) + 2 \\
+    3  &= 2(1) + 1 \\
+    2  &= 1(2) + 0\,;
+\end{align*}
+so as expected, $\gcd(60,13) = 1$. Now let's back substitute to get 1 as a linear combination of 13 and 60:
+\begin{align*}
+    1  &= 3 - 2 \\
+    1  &= 3 - (5-3) = 3(2) + 5(-1) \\
+    1  &= (8-5)(2) + 5(-1) = 5(-3) + 8(2)\\
+    1  &= (13-8)(-3) + 8(2) = 8(5) + 13(-3) \\
+    1  &= (60-13(4))(5) + 13(-3) \\
+       &= 13(-23) + 60(5)\,.
+\end{align*}
+Massaging this linear combination slightly will give us $d$:
+\begin{align*}
+    13(-23) + 60(5) &= 1 \\
+    13(-23) &= 1 - 60(5) \\
+    13(37-60) &= 1 - 60(5) \\
+    13\cdot 37 &= 1 - 60k \\
+    13 \cdot 37 &\equiv 1 \mod 60\,;
+\end{align*}
+we have found the multiplicative inverse of 13 modulo 60: $d=37$. A quick check will show that $13\cdot37=481 = 60(8) + 1$ as required.
+\section{Security}
 
 \section{Conclusion}
 
