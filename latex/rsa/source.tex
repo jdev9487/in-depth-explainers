@@ -25,6 +25,7 @@
 \newtheorem*{soln}{Solution}
 \newtheorem{prop}{Proposition}
 
+\renewcommand{\sec}[1]{\S \ref{#1}}
 \newcommand{\lra}{\longrightarrow}
 \newcommand{\ra}{\rightarrow}
 \newcommand{\surj}{\twoheadrightarrow}
@@ -79,14 +80,53 @@
 \pagebreak
 
 \section{Introduction}
+Rivest-Shamir-Adleman, or RSA, is an example of a public-key cryptosystem. Understanding such a system requires understanding the basics of an alternative system first: \textit{symmetric}-key algorithms. These systems have one key that is used for both encryption and decryption. One such, ubiquitous, example of a symmetric-key algorithm is AES - Advanced Encryption Standard. Symmetric-key procedures involve two parties, wishing to securely transfer messages to one another, having the same key\footnote{Key exchange is a topic in its own right and is employed by most browsers when exchanging data with a server e.g. Diffie-Hellman key exchange.}. But what about scenarios where it is implausible to share keys or (a common requirement) the identity of one party needs to be verified?
 
-\section{Proof of correctness}
-If we have an integer $m$ (think of this as the \textit{message}) which we raise to the power $e$ (this as the \textit{encryption}) and then once again to the power $d$ (this as the \textit{decryption}), we wish to show that this is equal to (modulo some number $n$ which will be defined later) the original $m$: 
+Public key cryptography circumvents the needs for key sharing by employing key \textit{pairs}: one for encryption and the other for decryption. In such a system, encryption keys are made public and decryption keys are kept private. As a result, any party can encrypt a message but only the holder of the private key partner can decrypt it\footnote{In practice, both keys in the pair can be used for both encryption and decryption; encrypting with the private key is common place and used to verify identities of servers during a TLS handshake.}.
+
+But what is a `key' in this sense and what does it mean to encrypt/decrypt? At the heart of RSA is an equation detailing these terms:
+\begin{equation}\label{eqn:declaration}
+    m^{ed} \equiv m \mod n.
+\end{equation}
+$m$ here is the message we wish to encrypt. Any message written as a string of characters can be converted into a string of unicode representations, which can then be converted into a large integer e.g. the string ``Hello, world!" becomes the string of integers ``72 101 108 108 111 44 32 119 111 114 108 100 33", which then becomes the binary string:
+\begin{align*}
+    &0100100001100101011011000110110001101111001011000010 \\
+    &0000011101110110111101110010011011000110010000100001,
+\end{align*}
+which finally becomes\footnote{Actual RSA algorithms do one more step here: padding c.f. \sec{sec:gen-pad}.} the decimal number $m=5735816763073854953388147237921$.
+
+So we have converted our message into a number. But what about the symbols $e$ and $d$? These are our encryption/decryption \textit{keys}. First encryption. This means that we raise our $m$ to the power of another number, $e$:
+\begin{equation}
+    m\xrightarrow{\text{encryption}}m^e.
+\end{equation}
+Now we have changed the original message, $m$, into another number, $m^e$. To decrypt, we do an almost identical procedure, just with a different exponent, $d$:
+\begin{equation}
+    m^e\xrightarrow{\text{decryption}}m^{ed}.
+\end{equation}
+The astute among you will have noticed that our decrypted number $m^{ed}$ is not the same as our initial message $m$. This brings us to the last symbol in \ref{eqn:declaration}: mod $n$. All of the previous steps are done ``modulo $n$''. This means that if we end up with a number larger than $n$, we start taking away $n$ from the number until we get a number smaller than $n$ (more on this later c.f. \sec{sec:mod-ari}).
+
+But what is $n$? I will leave this until \sec{sec:poc} but for now it is worth explaining what constitutes the public (encryption) and private (decryption) keys. The public key is the combination of $e$ and $n$. The private key is the combination of  $d$ and $n$. If an `attacker' can work out $d$ from the combination of $e$ and $n$ then they have `cracked RSA' (not an easy task to put it mildly!). Choosing these values correctly is of vital importance to ensure the security of the algorithm, but if done with care, RSA is an \textit{extremely} secure method of encryption.
+
+The rest of this document is devoted to the mathematics behind this algorithm. I think it's fair to say that I assume a mathematical background but I do my best to dive into `all' areas that `need' explaining. As an example of the level I'm pitching at, it will be necessary for us to understand Fermat's little theorem. In order to do this I will assume the reader has seen `proof by induction' and the `binomial expansion' before but I will explain how modular division can be used to get the special case we need for RSA. The best description of the level of detail given is this: if I needed to understand it, I included it!. Whether or not that is helpful is something you will most likely find out reading on.
+
+\section{Public key cryptography}\label{sec:pkc}
+Alice wishes to send a message to Bob. She wishes to keep this message a secret that only Bob can read. Charlie is waiting to intercept any message for his own, malicious, purposes. How can we implement a framework that keeps the message out of Charlie's hands? There a few different ways to achieve this but we will focus here on a solution known as public-key cryptography.
+\subsection{Public key-private key pair}
+Every `user' (Alice, Bob and Charlie) all have a pair of `keys'; one that is public (everyone else has access to it) and the other is private (only accessible to the user that holds it). Without saying why this is the case (c.f. \sec{sec:poc}), messages encrypted with the private key can \textit{only} be decrypted with the public key. Likewise, messages encrypted with the public key can \textit{only} be decrypted with the public key. So, how can Alice send a private message to Bob without Charlie interfering?
+\subsubsection{Secrecy}
+Alice needs her message to be read \textit{only} by Bob. She can do this by encrypting her message with Bob's public key. Remember, \textit{everyone} has access to \textit{anyone's} public key. Once encrypted with Bob's public key, only Bob's private key can decrypt it. Given that only Bob has access to his private key, only Bob can read this message. Secrecy achieved.
+\subsubsection{Authenticity}
+Alice wishes to send some instructions to Bob: ``Please send \$100 to my bank account. From Alice". How can Bob be sure that Alice sent this message? What is stopping Charlie sending Bob the same message? Alice needs a way to convince Bob that she is the one who sent the message. She can achieve this by encrypting the message with her private key. The only way the message can be decrypted is with Alice's public key. Bob needs only to decrypt the message with Alice's public key. Anyone can do this, but no one can act as an imposter for Alice. Authenticity achieved.
+\subsection{Use}
+The most common usage of RSA is the authenticity aspect used for `signing' certificates in Transport Layer Security (TLS). When visiting a website using `https', the server has a certificate that is used to identify them and `prove' that they are who they say they are. Their certificate is `signed' with their private key. During the TLS handshake, the signature is decrypted with the server's public key (which any browser has access to). If this operation succeeds, the browser can be sure that the server is who the server is claiming to be.
+
+\section{Proof of correctness}\label{sec:poc}
+Now, that we have given some motivation for public-key cryptography, let us dive into how encryption and decryption take place mathematically. The message is represented by an integer $m$. Encryption and decryption `keys' are represented with exponents $e$ and $d$ respectively (note, from before, there is a symmetry between these exponents; encryption with $e$ or $d$ can only be decrypted with $d$ or $e$ respectively). If we raise $m$ to the power $e$ and then once again to the power $d$, we wish to show that this is equal to (modulo some number $n$ which will be defined later) the original $m$: 
 \begin{equation}\label{eqn:statement}
     (m^e)^d = m^{ed} \equiv m \mod n.
 \end{equation}
 Understood correctly, the original message $m$ is encrypted with the key $e$. It is then decrypted with the key $d$. Exponentiating $m$ with the product of $ed$ returns our original message. This is all done "modulo" some number $n$, so let's first understand a little modular arithmetic.
-\subsection{Modular arithmetic}
+\subsection{Modular arithmetic}\label{sec:mod-ari}
 As an example, $13 \equiv 1 \mod 4$. This means that remainder, upon dividing 13 by 4, is 1. Throughout this article, I will often break convention for modular notation and flip between two expressions of this relationship. $13 \equiv 1 \mod 4$ is the same as saying that $13 = 1 + k4$, where $k$ is an integer (in this case, 3). More generally,
 \begin{equation}
     a \equiv b \mod n \, \Leftrightarrow \, a = b + kn
@@ -123,7 +163,249 @@ since the final term is divisible by $n$. \ref{eqn:statement} would be more clea
 \end{equation*}
 but the above work shows this to be unnecessary.
 
-\subsection{Fermat's little theorem}
+\subsection{Outline of a proof}
+By ``proving" RSA, I really mean showing that equation \ref{eqn:statement} holds i.e. does raising $m$ to the power of $ed$ really produce a number that is some multiple of $n$ more that $m$. So far $e$, $d$, and $m$ have remained unexplained; they are, however, central to how RSA provides it security in encryption so let's include them now. The proof goes something like this:
+\begin{enumerate}
+    \item Choose $n$ such that $n$ is the product of two distinct primes $p$ and $q$.
+    \item Let $e$ and $d$ be \textit{modular multiplicative inverses} of one another with respect to the modulus \textit{totient function} of $n$ i.e. $e\cdot d \equiv 1 \mod \phi(n)$.
+    \item Use point 2 to show that $m^{ed} \equiv m \mod p$.
+    \item Repeat for $q$.
+    \item Infer that since it holds for both $p$ and $q$, it must hold for $n$.
+\end{enumerate}
+Plenty of detail is missing from this outline but that is the essence of it. Before getting into the weeds of the proof, it's important to clarify a few definitions.
+\subsubsection{Euler's totient function $\phi(n)$}
+Most explanations of the proof of correctness for RSA introduce $e$ and $d$ as multiplicative inverses with respect to modulus $\phi(n)$, Euler's totient function \footnote{It is actually often given in terms of \textit{Carmichael's} totient function: $\lambda(n)$. I won't explain here, but for prime $n$, $\phi(n) = \lambda(n)$}. What is actually important in the proof is that the are inverses with respect to the modulus $(p-1)(q-1)$. The totient function $\phi(n)$ counts how many positive integers up to $n$ are relatively prime to $n$. Take $\phi(11)$; this will be every integer from 1 to 10, since 11 is prime. For any prime number $n$, $\phi(n) = n-1$. One property of the totient function is that it is multiplicative i.e. $\phi(AB) = \phi(A)\phi(B)$ so long as $A$ and $B$ are co-prime (share no prime factors). In our example, $p$ and $q$ are indeed co-prime since they are prime themselves. This means that $\phi(n)=\phi(p\cdot q)=(p-1)(q-1)$.
+
+\subsubsection{Fermat's little theorem}
+At the heart of this proof is Fermat's little (not his last!) theorem:
+\begin{thm}\label{thm:fermat}
+    For any prime $p$ and positive integer $a$, $a^p \equiv a \mod p$.
+\end{thm}
+The proof of this will come shortly but let's see why we even need it; this is at the heart of the proof of correctness:
+\begin{align}
+m^{ed}&=m^{ed-1}\cdot m \\
+      &=m^{k\phi(n)}\cdot m  \\
+      &=m^{k(p-1)(q-1)}\cdot m  \\
+      &=m^{k_p(p-1)}\cdot m  \\
+      &=\left(m^{(p-1)}\right)^{k_p}\cdot m . \label{line:fermat}
+\end{align}
+We can see that we have something approaching the form in Fermat's little theorem in the brackets of line \ref{line:fermat}. If the quantity inside the brackets evaluated to 1 then we would be in business. This is indeed the case but we need show Fermat's little theorem to be true before we can get to what is a special case. Let's prove theorem \ref{thm:fermat}:
+\begin{proof}
+    We proceed by induction. Base case ($a=1$): $1^p = 1$; done. We now need the inductive step. Assume that $k^p \equiv 1 \mod p$ and evaluate $(k+1)^p$:
+    \begin{align*}
+        (k + 1)^p &=k^p + \left[\sum_{i=1}^{p-1} \binom{p}{i}k^{p-i}\right] + 1 \\
+                  &=k^p + 1 + \left[\sum_{i=1}^{p-1} \frac{p!}{(p-i)!\cdot i!}k^{p-i}\right]
+    \end{align*}
+    The binomial coefficient is always an integer. Since $p$ is prime, we can safely say that there is no factor of $p$ in the denominator. Since it is only in the numerator it can be factored out leaving an integer $N$ in its place:
+    \begin{align*}
+        (k + 1)^p &=k^p + 1 + p\left[\sum_{i=1}^{p-1} \frac{(p-1)!}{(p-i)!\cdot i!}k^{p-i}\right] \\
+                  &=k^p + 1 + p \cdot N \\
+                  &\equiv k^p + 1 \mod p \\
+                  &\equiv k + 1 \mod p\qquad \textrm{(assumption)}
+    \end{align*}
+    Hence, $a^p \equiv a \mod p$.
+\end{proof}
+Line \ref{line:fermat} has $p-1$ in the exponent. Fermat's little theorem has only $p$ in the exponent. It would be nice if we could ``divide" both sides by a giving a potential special case of the equality:
+\begin{equation}\label{eqn:fermat-special}
+    a^{p-1} \overset{?}{\equiv} 1 \mod p.
+\end{equation}
+It turns out that we can remove the `?' from above \textit{if} we add the restriction that $\gcd(a, p) = 1$ i.e. $a$ and $p$ are co-prime. Why is this?
+\subsubsection{Modular division}
+Suppose we have the relation
+\begin{equation}
+    sa \equiv ta \mod b
+\end{equation}
+where $s$ and $t$ are integers. It is tempting to ``cancel'' $a$ and be left with $s \equiv t \mod b$. We shall, however, prove the following:
+\begin{thm}
+    $sa \equiv ta \mod b \, \implies \, s \equiv t \mod b$, if $\gcd(a,b) = 1$.
+\end{thm}
+\begin{proof}
+    If $\gcd(a,b) \neq 1$, this implies we can write $b = ra$ for some integer $r$. Now we have
+    \begin{align*}
+        sa \equiv ta \mod b & \implies sa - ta = kb \\
+        & \implies sa - ta = kra \\
+        & \implies s - t = kr \\
+        & \implies s \equiv t \mod r.
+    \end{align*}
+    The best we can say is that $s$ and $t$ are equivalent with respect to $r=\frac{b}{a}$, but not $b$. Now, if $\gcd(a, b) = 1$, then $b\neq ra$ and we have:
+    \begin{align*}
+        sa \equiv ta \mod b & \implies sa - ta = kb \\
+        & \implies a(s-t) = kb \\
+        & \implies a(s-t) = lab \\
+        & \implies s - t = lb \\
+        & \implies s \equiv t \mod b,
+    \end{align*}
+    where we have introduced $k=la$; this relation must hold since the LHS is clearly divisible by $a$, hence the RHS must also be. But, by definition, $a\nmid b$ so to make the equality hold $a\mid k \implies k=la$. This concludes the proof.
+\end{proof}
+\subsection{A proof}
+We are almost in a position to prove \ref{eqn:statement}. We first need a small bit of logic to help us:
+\begin{cor}\label{cor:crt}
+    If $m^{ed} \equiv m \mod p$ and $m^{ed} \equiv m \mod q$ then it holds that $m^{ed} \equiv m \mod n$.
+\end{cor}
+\begin{proof}
+    \begin{equation}
+        m^{ed} \equiv m \mod p \implies p \mid m^{ed} - m
+    \end{equation}
+    This shows that $p$ is a prime factor of $m^{ed} - m$. Identical reasoning shows that $q$ is also a prime factor of $m^{ed} - m$. If both $p$ and $q$ are prime factors of $m^{ed} - m$, then it must be the case the $pq$ is a factor of $m^{ed} - m$ and hence $m^{ed} - m = kn \implies m^{ed} \equiv m \mod n$.
+\end{proof}
+We can now proceed to prove \ref{eqn:statement} by proving $m^{ed} \equiv m \mod p$.
+\begin{thm}
+For $n = pq$ with $p$ and $q$ prime, $m^{ed} \equiv m \mod n$ where $ed \equiv 1 \mod \phi(n)$.
+\end{thm}
+\begin{proof}
+    First, consider the case where $\gcd(m,p) \neq 1$. This implies that $m$ is a multiple of $p$:
+    \begin{align*}
+        m^{ed} &=(rp)^{ed} \\
+        &\equiv 0 \mod p \\
+        &\equiv 0 \mod p \\
+        &\equiv rp \mod p \\
+        &\equiv m \mod p.
+    \end{align*}
+    Second, consider the case where $\gcd(m,p)=1$. 
+    \begin{equation}\label{eqn:rsa-first}
+        m^{ed} = m^{ed-1}m
+    \end{equation}
+    Recalling the fact that $e$ and $d$ are multiplicative inverses of each other with respect to the modulus $\phi(n)$, we can write the relationship between $e$ and $d$ in the following way:
+    \begin{align*}
+        ed &\equiv 1 \mod \phi(n) \\
+        ed &=1 + k\phi(n) \\
+        ed - 1 &= k\phi(n) \\
+        ed - 1 &= k(p-1)(q-1) \\
+        ed - 1 &= k_p(p-1) = k_q(q-1)
+    \end{align*}
+    where in the last line I have introduced two different variables $k_p = k(q-1)$ and $k_q=k(p-1)$. What's important is that they are constants. We can now substitute this new form into equation \ref{eqn:rsa-first}:
+    \begin{align*}
+        m^{ed} &= m^{k_p(p-1)}m \\
+        m^{ed} &= \left(m^{(p-1)}\right)^{k_p}m.
+    \end{align*}
+    Since we are specifically dealing with the case where $\gcd(m, p)=1$, we now employ the special case of Fermat's little theorem \ref{eqn:fermat-special}:
+    \begin{align*}
+        m^{ed} &= (1)^{k_p}m \mod p \\
+        m^{ed} &\equiv m \mod p.
+    \end{align*}
+    $m^{ed}$ is equivalent to $m$ with respect to modulus $p$. Identical reasoning shows that $m^{ed}$ is equivalent to $m$ with respect to modulus $q$. Using corollary \ref{cor:crt}, this implies that $m^{ed} \equiv m \mod n$.
+\end{proof}
+\subsection{Implications}
+We have shown that if we start with any integer $m$ and apply the following steps:
+\begin{enumerate}
+    \item raise to the power of $e$;
+    \item reduce modulo $n$;
+    \item raise to the power of $d$; and
+    \item reduce modulo $n$,
+\end{enumerate}
+we will recover the original $m$. It is important to note that $e$ and $d$ are essentially interchangeable. Messages encrypted with $e$ can only be decrypted with $d$. But the reverse is also true; messages encrypted with $d$ can only be decrypted with $e$. The fact that these keys function as encryption-decryption pairs is crucial to public key cryptography c.f. \sec{sec:pkc}.
+
+This entire proof is a proof that we will recover the original $m$ after these steps have been taken. This is very important but is not, on its own, enough to show that this algorithm can safely encrypt messages. Remember that once the message $m$ is encrypted into $m^e \mod n$, only the decrypting key $d$ should be able to produce the original message $m$. The preceding proof shows that $d$ does do the job. It does not, however, show that $d$ cannot be `guessed' or worked out easily. If decryption can be hacked then the whole algorithm, regardless of its elegance, is worthless.
+
+\section{Key generation and padding}\label{sec:gen-pad}
+When it actually comes down to encrypting with keys, three quantities must be known: $e$, $d$ and $n$. As mentioned previously, $e$ and $n$ form one key (remember from \sec{sec:poc} that both keys are symmetric - either can encrypt so long as the \textit{other} decrypts) and $d$ and $n$ form the other key. These three quantities are related via
+\begin{equation}\label{equ:edn}
+    e\cdot d \equiv 1 \mod \phi(n).
+\end{equation}
+Discussion up to this point has merely stated the existence of and $e$ and $d$ that satisfy \ref{equ:edn}, but it is not straightforward that two quantities should exist at all. $e$ and $d$ are called multiplicative inverses of one another and only exist if $\gcd(e,n)=\gcd(d,n)=1$. In most situations, $e$ is chosen such that it is relatively prime to $\phi(n)$ \footnote{A common way to achieve this is to ensure $e$ is a prime itself - 65537 is often used.} and then $d$ is computed using the Extended Euclidean Algorithm.
+\subsection{Extended Euclidean Algorithm (EEA)}
+The EEA is composed of two procedures: the Euclidean Algorithm to find the greatest common divisor of two numbers; and back-substitution to express the $\gcd$ as a linear combination of the two numbers. As an example, we wish to express the greatest common divisor of 58 and 24 as a linear combination of 58 and 24:
+\begin{align*}
+    (24,58)&\xrightarrow{\text{Euclidean Algorithm}}\gcd(24, 58)=2 \\
+    2&\xrightarrow{\text{Extended Euclidean Algorithm}}2 = 24(-12) + 58(5).
+\end{align*}
+This becomes useful in our scenario when $\gcd(e,\phi(n)) = 1$. Then, 1 can be expressed as a linear combination of $e$ and $\phi(n)$ (with coefficients chosen carefully):
+\begin{align*}
+    1 &= d e + k \phi(n) \\
+    1 &\equiv d e \mod \phi(n).
+\end{align*}
+Clearly, $d$ is the value we are after. So, how does the EEA do this?
+\subsubsection{Euclidean Algorithm}
+Let's take 58 and 24 as an example. We first wish to find the greatest common divisor of 58 and 24. Our first step is to divide 58 by 24:
+\[
+    58 = 24(2) + 10.
+\]
+We now `shift' the divisor and remainder one to the left and divide again:
+\[
+    24 = 10(2) + 4.
+\]
+Continue until the remainder is zero:
+\begin{align*}
+    10 &= 4(2) + 2 \\
+    4 &= 2(2) + 0.
+\end{align*}
+The final non-zero remainder is the greatest common divisor: $\gcd(58,24) = 2$.
+\begin{thm}
+    The algorithm detailed above produces the greatest common divisor for the two inputs $r_0$ and $r_1$.
+\end{thm}
+\begin{proof}
+    First, we show that the final non-zero remainder is \textit{a} common divisor of $r_0$ and $r_1$. Second, we show that this is greater than or equal to \textit{any} common divisor and is hence the greatest common divisor.
+    
+    The procedure takes on the following form:
+    \begin{align}
+        r_0 &= r_1 \cdot q_2 + r_2 \label{eqn:ea-first} \\
+        r_1 &= r_2 \cdot q_3 + r_3 \label{eqn:ea-second} \\
+        &\vdots \nonumber\\
+        r_k &= r_{k+1} \cdot q_{k+2} + r_{k+2} \label{eqn:ea-recursion}\\
+        &\vdots \nonumber\\
+        r_{n-2} &= r_{n-1} \cdot q_n + r_n \label{equ:ea-penul} \\
+        r_{n-1} &= r_n \cdot q_{n+1} \label{equ:ea-final}
+    \end{align}
+    Note that the $r_n$ values will always be decreasing since the remainder of a division operation is always less than the divisor. During the `shift' operation the remainder becomes the subsequent divisor and hence the subsequent remainder will be less as well. This proves that we will eventually reach a situation where the remainder is 0.
+
+    To prove that $r_n$, the final non-zero remainder, is a common divisor to $r_0$ and $r_1$ we will show that if $r_n\mid r_{k+2}$ and $r_n\mid r_{k+1}$ then $r_n \mid r_k$. In fact, \ref{eqn:ea-recursion} shows this. This recursion relation then allows us to show that $r_n \mid r_1$ and $r_n \mid r_0$ if we can find \textit{two} base cases. \ref{equ:ea-final} shows $r_n \mid r_{n-1}$ and the combination of \ref{equ:ea-penul} and \ref{equ:ea-final} shows $r_n \mid r_{n-2}$. Hence $r_n \mid r_1$ and $r_n \mid r_0$ so is \textit{a} common divisor to $r_1$ and $r_2$.
+
+    We now need to show that $r_n$ is the \textit{greatest} common divisor. We proceed by working with \textit{any} common divisor, say $g$:
+    \begin{equation}
+        r_0 = k_0 g \quad, \quad r_1 = k_1g.
+    \end{equation}
+    In a similar manner to before, \ref{eqn:ea-recursion} can be used to show that if $g \mid r_k$ and $g \mid r_{k+1}$ then $g \mid r_{k+2}$. \ref{eqn:ea-first} and \ref{eqn:ea-second} show the base cases and hence we can say that our arbitrary common divisor of $r_0$ and $r_1$, $g$, must divide $r_n$.
+
+    We have shown that \textit{any} common divisor must divide $r_n$. We have also shown that $r_n$ is a common divisor of $r_0$ and $r_1$. These two results prove that $r_n$ is the greatest of all the common divisors; $\gcd(r_0, r_1) = r_n$.
+\end{proof}
+
+\subsubsection{Extended Euclidean Algorithm}
+We can now find the greatest common divisor of two numbers. Of particular importance to RSA is the situation when the greatest common divisor is 1 i.e. they are \textit{coprime}. Our two keys satisfy \ref{equ:edn}.
+Such a relationship is only possible if $e$ (and consequently $d$) are coprime to $\phi(n)$. So we know that the Euclidean Algorithm would find $1$ and the greatest common divisor. 
+
+The Extended Euclidean Algorithm takes this and expresses the greatest common divisor and a linear combination of the two numbers we started with. This process of back substitution is best shown with an example. Let's take $n = p\cdot q = 7\cdot11 = 77$ giving $\phi(n) = 6\cdot 10 = 60$. We now need an $e$ which is coprime to 60, say $e = 13$. We now wish to find $d$ the satisfies \ref{equ:edn}. Let's start off with $r_0 = 60$ and $r_1 = 13$:
+\begin{align*}
+    60 &= 13(4) + 8 \\
+    13 &= 8(1) + 5 \\
+    8  &= 5(1) + 3 \\
+    5  &= 3(1) + 2 \\
+    3  &= 2(1) + 1 \\
+    2  &= 1(2) + 0\,;
+\end{align*}
+so as expected, $\gcd(60,13) = 1$. Now let's back substitute to get 1 as a linear combination of 13 and 60:
+\begin{align*}
+    1  &= 3 - 2 \\
+    1  &= 3 - (5-3) = 3(2) + 5(-1) \\
+    1  &= (8-5)(2) + 5(-1) = 5(-3) + 8(2)\\
+    1  &= (13-8)(-3) + 8(2) = 8(5) + 13(-3) \\
+    1  &= (60-13(4))(5) + 13(-3) \\
+       &= 13(-23) + 60(5)\,.
+\end{align*}
+Massaging this linear combination slightly will give us $d$:
+\begin{align*}
+    13(-23) + 60(5) &= 1 \\
+    13(-23) &= 1 - 60(5) \\
+    13(37-60) &= 1 - 60(5) \\
+    13\cdot 37 &= 1 - 60k \\
+    13 \cdot 37 &\equiv 1 \mod 60\,;
+\end{align*}
+we have found the multiplicative inverse of 13 modulo 60: $d=37$. A quick check will show that $13\cdot37=481 = 60(8) + 1$ as required.
+
+\subsection{RSA worked example}
+So now we have a way to generate $e$ and $d$. The example above shows that choosing two random primes will generate two multiplicative inverses that can be used as public and private keys. Let's continue with these examples to show how messages can be encrypted and decrypted in practice [real values in square brackets]:
+\begin{enumerate}
+    \item Choose primes $p$ and $q$ and calculate $n$ [$p=7$, $q=11$ implying $n=77$].
+    \item Discard $p$ and $q$ as they are no longer required.
+    \item Choose $e$ such that it is relatively prime to $\phi(n)$ [$e=13$ is relatively prime to $\phi(77)=60$].
+    \item Set $d$ equal to the multiplicative inverse of $e$ [$d = 37$].
+    \item Public (encryption) key is ($e$ and $n$) [(13, 77)].
+    \item Private (decryption) key is ($d$ and $n$) [(37, 77)].
+    \item Construct a `message' $m$ [$m=3$].
+    \item Encrypt $m$: $m \rightarrow m^e \mod n$ [$3 \rightarrow 3^{13} \mod 77 = 38$].
+    \item Decrypt encryption: $m^e \mod n \rightarrow (m^e \mod n)^d \mod n$ [$38 \rightarrow 38^{37}\mod 77 = 3$].
+    \item Verify that $m$ is equal to the decrypted encryption [$3=3$].
+\end{enumerate}
+This example shows that a number can be encrypted, passed around (transferred in a public setting) and decrypted. It should provide confidence that the process is correct. However, the public key of (13, 77) is \textit{incredibly} weak. The entire RSA protocol is public. So knowing that $n=77$, one can factorise this into $77=7\cdot11$. Then, $\phi(n)$ can be calculated and so can the private key $d$. The \textit{security} of RSA revolves around the fact that for large enough $n$, factorisation is \textit{really} hard.
 
 \section{Security}
 
