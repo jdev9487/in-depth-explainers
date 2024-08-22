@@ -360,13 +360,10 @@ The final non-zero remainder is the greatest common divisor: $\gcd(58,24) = 2$.
 \end{proof}
 
 \subsubsection{Extended Euclidean Algorithm}
-We can now find the greatest common divisor of two numbers. Of particular importance to RSA is the situation when the greatest common divisor is 1 i.e. they are \textit{coprime}. Our two keys satisfy the relation
-\begin{equation}\label{eqn:mul-inv}
-    e\cdot d \equiv 1 \mod \phi(n).
-\end{equation}
+We can now find the greatest common divisor of two numbers. Of particular importance to RSA is the situation when the greatest common divisor is 1 i.e. they are \textit{coprime}. Our two keys satisfy \ref{equ:edn}.
 Such a relationship is only possible if $e$ (and consequently $d$) are coprime to $\phi(n)$. So we know that the Euclidean Algorithm would find $1$ and the greatest common divisor. 
 
-The Extended Euclidean Algorithm takes this and expresses the greatest common divisor and a linear combination of the two numbers we started with. This process of back substitution is best shown with an example. Let's take $n = p\cdot q = 7\cdot11 = 77$ giving $\phi(n) = 6\cdot 10 = 60$. We now need an $e$ which is coprime to 60, say $e = 13$. We now wish to find $d$ the satisfies \ref{eqn:mul-inv}. Let's start off with $r_0 = 60$ and $r_1 = 13$:
+The Extended Euclidean Algorithm takes this and expresses the greatest common divisor and a linear combination of the two numbers we started with. This process of back substitution is best shown with an example. Let's take $n = p\cdot q = 7\cdot11 = 77$ giving $\phi(n) = 6\cdot 10 = 60$. We now need an $e$ which is coprime to 60, say $e = 13$. We now wish to find $d$ the satisfies \ref{equ:edn}. Let's start off with $r_0 = 60$ and $r_1 = 13$:
 \begin{align*}
     60 &= 13(4) + 8 \\
     13 &= 8(1) + 5 \\
@@ -393,6 +390,23 @@ Massaging this linear combination slightly will give us $d$:
     13 \cdot 37 &\equiv 1 \mod 60\,;
 \end{align*}
 we have found the multiplicative inverse of 13 modulo 60: $d=37$. A quick check will show that $13\cdot37=481 = 60(8) + 1$ as required.
+
+\subsection{RSA worked example}
+So now we have a way to generate $e$ and $d$. The example above shows that choosing two random primes will generate two multiplicative inverses that can be used as public and private keys. Let's continue with these examples to show how messages can be encrypted and decrypted in practice [real values in square brackets]:
+\begin{enumerate}
+    \item Choose primes $p$ and $q$ and calculate $n$ [$p=7$, $q=11$ implying $n=77$].
+    \item Discard $p$ and $q$ as they are no longer required.
+    \item Choose $e$ such that it is relatively prime to $\phi(n)$ [$e=13$ is relatively prime to $\phi(77)=60$].
+    \item Set $d$ equal to the multiplicative inverse of $e$ [$d = 37$].
+    \item Public (encryption) key is ($e$ and $n$) [(13, 77)].
+    \item Private (decryption) key is ($d$ and $n$) [(37, 77)].
+    \item Construct a `message' $m$ [$m=3$].
+    \item Encrypt $m$: $m \rightarrow m^e \mod n$ [$3 \rightarrow 3^{13} \mod 77 = 38$].
+    \item Decrypt encryption: $m^e \mod n \rightarrow (m^e \mod n)^d \mod n$ [$38 \rightarrow 38^{37}\mod 77 = 3$].
+    \item Verify that $m$ is equal to the decrypted encryption [$3=3$].
+\end{enumerate}
+This example shows that a number can be encrypted, passed around (transferred in a public setting) and decrypted. It should provide confidence that the process is correct. However, the public key of (13, 77) is \textit{incredibly} weak. The entire RSA protocol is public. So knowing that $n=77$, one can factorise this into $77=7\cdot11$. Then, $\phi(n)$ can be calculated and so can the private key $d$. The \textit{security} of RSA revolves around the fact that for large enough $n$, factorisation is \textit{really} hard.
+
 \section{Security}
 
 \section{Conclusion}
