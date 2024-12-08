@@ -1,0 +1,178 @@
+\documentclass[]{scrartcl}
+
+\setkomafont{disposition}{\normalfont\bfseries}
+
+\author{jdev9487}
+\title{Constructing $\mathbb{R}$}
+\subtitle{How the real numbers can be obtained from definitions around the integers}
+
+\usepackage{array,epsfig}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amsxtra}
+\usepackage{amsthm}
+\usepackage{mathrsfs}
+\usepackage{color}
+\usepackage{enumitem}
+
+\theoremstyle{definition}
+\newtheorem{defn}{Definition}
+\newtheorem{thm}{Theorem}
+\newtheorem{cor}{Corollary}
+\newtheorem*{rmk}{Remark}
+\newtheorem{lem}{Lemma}
+\newtheorem{ex}{Example}
+\newtheorem*{soln}{Solution}
+\newtheorem{prop}{Proposition}
+
+\renewcommand{\sec}[1]{\S \ref{#1}}
+\newcommand{\lra}{\longrightarrow}
+\newcommand{\ra}{\rightarrow}
+\newcommand{\surj}{\twoheadrightarrow}
+\newcommand{\graph}{\mathrm{graph}}
+\newcommand{\bb}[1]{\mathbb{#1}}
+\newcommand{\Z}{\bb{Z}}
+\newcommand{\Q}{\bb{Q}}
+\newcommand{\R}{\bb{R}}
+\newcommand{\C}{\bb{C}}
+\newcommand{\N}{\bb{N}}
+\newcommand{\M}{\mathbf{M}}
+\newcommand{\m}{\mathbf{m}}
+\newcommand{\MM}{\mathscr{M}}
+\newcommand{\HH}{\mathscr{H}}
+\newcommand{\Om}{\Omega}
+\newcommand{\Ho}{\in\HH(\Om)}
+\newcommand{\bd}{\partial}
+\newcommand{\del}{\partial}
+\newcommand{\bardel}{\overline\partial}
+\newcommand{\textdf}[1]{\textbf{\textsf{#1}}\index{#1}}
+\newcommand{\img}{\mathrm{img}}
+\newcommand{\ip}[2]{\left\langle{#1},{#2}\right\rangle}
+\newcommand{\inter}[1]{\mathrm{int}{#1}}
+\newcommand{\exter}[1]{\mathrm{ext}{#1}}
+\newcommand{\cl}[1]{\mathrm{cl}{#1}}
+\newcommand{\ds}{\displaystyle}
+\newcommand{\vol}{\mathrm{vol}}
+\newcommand{\cnt}{\mathrm{ct}}
+\newcommand{\osc}{\mathrm{osc}}
+\newcommand{\LL}{\mathbf{L}}
+\newcommand{\UU}{\mathbf{U}}
+\newcommand{\support}{\mathrm{support}}
+\newcommand{\AND}{\;\wedge\;}
+\newcommand{\OR}{\;\vee\;}
+\newcommand{\Oset}{\varnothing}
+\newcommand{\st}{\ni}
+\newcommand{\wh}{\widehat}
+\let\oldref\ref
+\renewcommand{\ref}[1]{(\oldref{#1})}
+
+\setlength{\topmargin}{-.3 in}
+\setlength{\oddsidemargin}{0in}
+\setlength{\evensidemargin}{0in}
+\setlength{\textheight}{9.in}
+\setlength{\textwidth}{6.5in}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+\pagebreak
+
+\section{Introduction}
+Explain what the goal of this is and why it is important/necessary.
+
+\section{Definitions}
+\subsection{Relations}
+A (binary) relation $R$ over sets $A$ and $B$ is a set of ordered pairs $(a, b)$  where $a \in A$ and $b \in B$. One says that $a$ is related to $b$ by $R$ if the ordered pair $(a, b)$ is in the set defined by $R$ and one would write $aRb$. 
+
+This is a bit of a mouthful. An example will help make this clearer. Let's define the relation $L$ to mean ``likes". It must act over two sets $A$ and $B$ so let's make both $A$ and $B$ the set of all humans in London. Take two elements of this set, say $a$ and $b$ (both of which are people). We would write $aLb$ if and only if person $a$ likes person $b$. The fact that $a$ comes before $b$ is important; it is not guaranteed that $aLb$ implies that $bLA$ (Tom may like Sarah but Sarah may not like Tom). If we were to go through the entire set of people in London and record which people every person liked, we would have a set of ordered pairs. Perhaps it may look something like
+$$
+\{(\text{Tom}, {\text{Sarah}}), (\text{Tom}, \text{Fatima}), (\text{Fatima}, \text{Susie})\hdots\}.
+$$
+We can write Tom $L$ Sarah or Fatima $L$ Susie since these ordered pairs are in the set defining the relation $L$.
+
+Examples of relations include: ``equality" ($=$), ``less than" ($<$) and ``is a subset of" ($\subset$). ``Equality'' (when applied to integers) is an example of an equivalence relation and can be generalised to define equality on objects that are not integers; this is exactly what we will do for constructing the rationals.
+
+\subsection{Equivalence}
+An equivalence relation should in some way imply that two objects are the same as each other. However the relation is actually defined, we can call it (let's give it a name, $E$) and \textit{equivalence} relation if it satisfies three conditions:
+\begin{enumerate}
+    \item \textit{Reflexivity}: $aEa$ is true;
+    \item \textit{Symmetry}: $aEb \implies bEa$; and
+    \item \textit{Transitivity}: $aEb$ and $bEc \implies aEc$.
+\end{enumerate}
+Let's take our example of a relation $L$ where we can write $aLb$ if and only if $a$ ``likes'' $b$. Is $L$ and equivalence relation?
+\begin{enumerate}
+    \item Is it the case that $a$ necessarily likes $a$? Does everyone like themselves? In order to satisfy anyone of these conditions, it must hold for all elements. Since we cannot guarantee that everyone likes themselves, $L$ fails reflexivity (we don't need to check any more but it will be helpful nonetheless).
+    \item It is the case the if $a$ likes $b$ then $b$ likes $a$? Experience in dating should tell us that symmetry is not satisfied either.
+    \item What about transitivity? I like my friends, but I do not like all of their friends. $L$ is not transitive either.
+\end{enumerate}
+As it turns out, $L$ fails all three conditions to be an equivalence relation. We will encounter a relation that is used for constructing the rationals that \textit{is} an equivalence relation. It will be given the generic sign ``$\sim$''.
+
+\subsection{Ordering}
+Another very important notion is that of ordering. This is taken for granted with the integers: one integer can always be compared to another allowing us to write $2 < 5$ for example. In order for an ordering ``$<$'' to be defined on a set of objects, it must satisfy two conditions:
+\begin{enumerate}
+    \item \textit{Trichotomy}: exactly one of the following must be true: $a<b$, $a=b$ or $b<a$; and
+    \item \textit{Transitivity}: $a<b$ and $b<c \implies a<c$.
+\end{enumerate}
+When constructing the other sets of objects (the rationals $\Q$ and the reals $\R$), it will be important to check that certain sets are ordered. In order to do this, an ordering will need to be defined on the elements within the sets. Any valid ordering must satisfy trichotomy and transitivity.
+
+\subsection{Groups and homomorphisms}
+A group $G$ is a set, together with an operation $*$, that satisfies three axioms:
+\begin{enumerate}
+    \item \textit{Identity}: there exists an element $e\in G$ such that $a*e = e*a = a$ for all $a\in G$;
+    \item \textit{Inverse}: there exists an element $a^{-1} \in G$ such that $a*a^{-1} = a^{-1}*a = e$ for all $a \in G$; and
+    \item \textit{Closure}: for all $a, b \in G$, $a*b\in G$.
+\end{enumerate}
+Examples of groups are the integers under addition: $(\Z, +)$ and $(\{1,2,3,4\}, \cdot \mod 5)$.
+
+A homomorphism is a function $f$ that relates two groups $G$ and $H$ to each other where $f$ must satisfy the following condition:
+$$
+f(a)\cdot f(b) = f(a*b)
+$$
+Note the two operations $\cdot$ and $*$. If we have found a homomorphism from $G$ to $H$, we would write $f: G \rightarrow H$, ``$\cdot$'' would be the operation between elements of $H$ and ``$*$'' would be the operation between elements of $G$.
+
+This is an important concept as it will allow us to show that the sets we construct ($\Q$ and $\R$) in some sense extend the integers. In fact, we will show that there exists a homomorphism from $\Z$ to a subset of $\Q$. We will then show that the function from $\Z$ to that subset is a \textit{bijection} which means we can say that the rationals contain a subset that is \textit{isomorphic} to the integers. We can then show later that the reals contain a subset that is isomorphic to the rationals.
+
+\subsection{Rings}
+Rings are groups that also have another operation defined on them. It is customary to use the symbols ``$+$'' and ``$\times$'' for these two operations. A ring must be a commutative group under ``$+$'' ($a+b = b+a$) along with being closed under ``$\times$'' and having a multiplicative identity. What's more, the two operations must be related by the distribute rule: $a\times(b+c) = a\times b + a\times c$.
+
+$\Z$ forms a ring. It is not required that a ring have multiplicative inverses and indeed $\Z$ does not. An example of a ring that \textit{does} have multiplicative inverses would be $(\Z/5\Z)^{\times}$: $1\times1 = 1, 2\times3 = 6 \equiv 1 \mod 5$ and $4\times4 = 16 \equiv 1 \mod 5$.
+
+\subsection{Fields}
+Fields are rings that have additional properties, namely: commutativity of multiplication and multiplicative inverses. This is the list of requirements to be a field, $F$. First, addition:
+\begin{enumerate}[label=A\arabic*.]
+    \item there exists an additive identity $0$ such that $a+0=a$ for all $a\in F$;
+    \item there exists an additive inverse $-a$ such that $a+-a=a-a=0$ for all $a\in F$;
+    \item the field is closed such that $a+b \in F$; and
+    \item addition is commutative: $a+b=b+a$ for all $a, b \in F$.
+\end{enumerate}
+Second, multiplication:
+\begin{enumerate}[label=M\arabic*.]
+    \item there exists a multiplicative identity $1$ such that $a\times1=a$ for all $a\in F$;
+    \item there exists a multiplicative inverse $a^{-1}$ such that $a\times a^{-1} = 1$ for all $a\in F$;
+    \item the field is closed such that $a\times b \in F$; and
+    \item multiplication is commutative: $a\times b=b\times a$ for all $a, b \in F$.
+\end{enumerate}
+Third, addition and multiplication must be related via the distributive law:
+$$
+a\times(b+c) = a\times b + a\times c.
+$$
+
+
+\subsection{Ordered Fields}
+
+\section{What are the rationals?}
+\subsection{Definition}
+\subsection{$\Q$ is an ordered field}
+\subsection{$\Q$ extends $\Z$}
+\subsection{Ordering of $\Z$ is preserved}
+
+\section{What are the reals?}
+\subsection{Definition}
+\subsection{$\R$ is an ordered field}
+\subsection{$\R$ extends $\Q$}
+\subsection{Ordering of $\Q$ is preserved}
+
+\end{document}
