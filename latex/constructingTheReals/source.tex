@@ -118,7 +118,7 @@ Another very important notion is that of ordering. This is taken for granted wit
 \end{enumerate}
 When constructing the other sets of objects (the rationals $\Q$ and the reals $\R$), it will be important to check that certain sets are ordered. In order to do this, an ordering will need to be defined on the elements within the sets. Any valid ordering must satisfy trichotomy and transitivity.
 
-\subsection{Groups and homomorphisms}
+\subsection{Groups}
 A group $G$ is a set, together with an operation $*$, that satisfies three axioms:
 \begin{enumerate}
     \item \textit{Identity}: there exists an element $e\in G$ such that $a*e = e*a = a$ for all $a\in G$;
@@ -127,6 +127,7 @@ A group $G$ is a set, together with an operation $*$, that satisfies three axiom
 \end{enumerate}
 Examples of groups are the integers under addition: $(\Z, +)$ and $(\{1,2,3,4\}, \cdot \mod 5)$.
 
+\subsection{Homomorphisms}
 A homomorphism is a function $f$ that relates two groups $G$ and $H$ to each other where $f$ must satisfy the following condition:
 $$
 f(a)\cdot f(b) = f(a*b)
@@ -143,17 +144,17 @@ $\Z$ forms a ring. It is not required that a ring have multiplicative inverses a
 \subsection{Fields}
 Fields are rings that have additional properties, namely: commutativity of multiplication and multiplicative inverses. This is the list of requirements to be a field, $F$. First, addition:
 \begin{enumerate}[label=A\arabic*.]
+    \item addition is commutative: $a+b=b+a$ for all $a, b \in F$;
     \item there exists an additive identity $0$ such that $a+0=a$ for all $a\in F$;
-    \item there exists an additive inverse $-a$ such that $a+-a=a-a=0$ for all $a\in F$;
-    \item the field is closed such that $a+b \in F$; and
-    \item addition is commutative: $a+b=b+a$ for all $a, b \in F$.
+    \item there exists an additive inverse $-a$ such that $a+-a=a-a=0$ for all $a\in F$; and
+    \item the field is closed such that $a+b \in F$.
 \end{enumerate}
 Second, multiplication:
 \begin{enumerate}[label=M\arabic*.]
+    \item multiplication is commutative: $a\times b=b\times a$ for all $a, b \in F$;
     \item there exists a multiplicative identity $1$ such that $a\times1=a$ for all $a\in F$;
-    \item there exists a multiplicative inverse $a^{-1}$ such that $a\times a^{-1} = 1$ for all $a\in F$;
-    \item the field is closed such that $a\times b \in F$; and
-    \item multiplication is commutative: $a\times b=b\times a$ for all $a, b \in F$.
+    \item there exists a multiplicative inverse $a^{-1}$ such that $a\times a^{-1} = 1$ for all $a\in F$; and
+    \item the field is closed such that $a\times b \in F$.
 \end{enumerate}
 Third, addition and multiplication must be related via the distributive law:
 $$
@@ -162,12 +163,159 @@ $$
 
 
 \subsection{Ordered Fields}
+Once constructed, we will see the the real numbers make up an \textit{ordered field}. This is a field with and order but also the property that order is preserved by the field operations i.e. for $x, y, z \in F$,
+$$
+x < y \implies x+z < y+z
+$$
+$$
+x < y \implies x\times z < y\times z\quad (z>0)
+$$
 
 \section{What are the rationals?}
+The rational numbers are familiar to most. Informally they are know as fractions, or ratios of numbers; $\frac{1}{2}, \frac{3}{8}$ and so on. But we must be careful in simply giving a label to these numbers. It is not at all clear what the notation $\frac{a}{b}$ should represent. It is the goal of this section to rigorously define what the rationals are and show that they are an ordered field that in a meaningful sense \textit{extend} the integers.
+
 \subsection{Definition}
+Before we give the definition of the rational numbers, it will be helpful to think about equivalent fractions. Most (attentive) children will be able to show that $\frac{2}{4}$ is in some sense \textit{equivalent} to $\frac{1}{2}$ by cancelling a factor of $2$ from both numerator and denominator. This should imply that these two fractions should belong to an \textit{equivalence class} of fractions all related by an appropriately defined \textit{equivalence relation}. The notation $\frac{a}{b}$, whilst familiar, is as of yet unjustified so we will stick to more fundamental set theory notation in defining this equivalence relation and talk about ordered pairs of integers. Two ordered pairs of integers $(a, b)$ and $(c, d)$ can said to be equivalent if and only if $ad=bc$. Or, more compactly:
+$$
+(a,b) \sim (c,d) \iff ad=bc.
+$$
+It now makes (a bit of) sense to say that $\frac{2}{4}$ is equivalent to $\frac{1}{2}$ since $2\cdot2 = 4\cdot1$. But we are still not really allowed to use the fraction notation just yet and we still need to justify this notion of equivalence. Is $\sim$ really an equivalence relation? If it is, then it should satisfy reflexivity, symmetry and transitivity.
+\begin{enumerate}
+    \item Is $(a,b)\sim(a,b)$? $ab=ba$ since multiplication of integers is commutative. Reflexivity is obeyed.
+    \item If $(a,b) \sim (c,d)$, does $(c,d) \sim (a,b)$? Our assumption shows that $ad = bc$ which implies that $cb = da$ which in turn implies that $(c,d) \sim (a,b)$. Symmetry is obeyed.
+    \item Does $(a,b) \sim (c, d)$ and $(c,d) \sim (e,f)$ imply that $(a,b)\sim(e,f)$? This requires a bit more work but again holds:
+    \begin{align*}
+        (a, b) \sim (c,d) \AND (c,d) \sim (e,f) &\implies ad=bc \AND cf=de \\
+        &\implies adcf=bcde \\
+        &\implies cd(af - be) = 0 \\
+        &\implies af - be = 0 \\
+        &\implies af = be \\
+        &\implies (a,b) \sim (e,f).
+    \end{align*}
+\end{enumerate}
+We have shown that $\sim$ is indeed an equivalence relation. This allows use to put all ordered pairs of integers into equivalence classes; collections of objects that are all $\sim$ to each other. We will call each equivalence class ``$\frac{a}{b}$'' with the condition that $\gcd(a,b) = 1$. So, for example,
+$$
+\frac{2}{3} = \left\{ (2, 3), (4, 6), (6,9), ..., (2n, 3n), ... \right\}.
+$$
+We are now in a position to define $\Q$:
+$$
+\Q = \left\{ \frac{a}{b}\,|\,(a,b)\in \Z \times (\Z \setminus 0) \right\},
+$$
+where me must exclude $b$ from being $0$. It is now understood that $\Q$ is a set of equivalence classes of ordered pairs of integers. This is almost it. But if we look carefully, we see that there are some duplicates in this set. The rational $\frac{a}{-b}$ is equal to $\frac{-a}{b}$ since $a\cdot b = -b\cdot -a$. To ensure we have no duplicates, we can restrict $b$ to be in the natural numbers. Finally then,
+$$
+\Q = \left\{ \frac{a}{b}\,|\,(a,b)\in \Z \times \N \right\}.
+$$
+But $\Q$ is much more that a set of objects; it forms an ordered field.
+
 \subsection{$\Q$ is an ordered field}
+We will show the $\Q$ is a field by going through each axiom and showing it holds but first we need to define addition and multiplication in $\Q$.
+\subsubsection{Operations in $\Q$}
+It perhaps comes as no surprise that addition and multiplication are defined:
+$$
+\frac{a}{b} + \frac{c}{d} = \frac{ad+bc}{bd}\text{ and }\frac{a}{b}\cdot\frac{c}{d}=\frac{ac}{bd}
+$$
+but we must be careful that these operations are well defined with our equivalence relation. It should be the case that if $(a,b) \sim (\tilde{a}, \tilde{b})$ and $(c,d) \sim (\tilde{c}, \tilde{d})$ then we should have 
+$$
+(ad+bc, bd) \sim (\tilde{a}\tilde{d} + \tilde{b}\tilde{c}, \tilde{b}\tilde{d})
+\text{ and }
+(ac,bd) \sim (\tilde{a}\tilde{c}, \tilde{b}\tilde{d}).
+$$
+Let's check multiplication first:
+\begin{align*}
+a\tilde{b}=b\tilde{a} \AND c\tilde{d}=d\tilde{c}
+    &\implies a\tilde{b}c\tilde{d} = b\tilde{a}d\tilde{c} \\
+&\implies ac\tilde{b}\tilde{d} = bd\tilde{a}\tilde{c} \\
+&\implies (ac,bd) \sim (\tilde{a}\tilde{c}, \tilde{b}\tilde{d}) \qed.
+\end{align*}
+And addition:
+\begin{align*}
+a\tilde{b}=b\tilde{a} \AND c\tilde{d}=d\tilde{c}
+    &\implies (ad+bc)\tilde{b}\tilde{d} = b\tilde{a}d\tilde{d} + b\tilde{b}d\tilde{c} \\
+&\implies (ad+bc)\tilde{b}\tilde{d} = bd(\tilde{a}\tilde{d} + \tilde{b}\tilde{c}) \\
+&\implies (ad+bc, bd) \sim (\tilde{a}\tilde{d} + \tilde{b}\tilde{c}, \tilde{b}\tilde{d}) \qed.
+\end{align*}
+\subsubsection{Field axioms}
+Now that we have addition and multiplication well defined on $\Q$ we can check that the axioms hold:
+\begin{enumerate}[label=A\arabic*.]
+    \item Additive commutativity: $$\frac{a}{b} + \frac{c}{d} = \frac{ad+bc}{bd} = \frac{cb + da}{db} = \frac{c}{d} + \frac{a}{b};$$
+    \item Additive identity: $$\frac{a}{b} + \frac{0}{1} = \frac{a\cdot 1 + b\cdot0}{b\cdot 1} = \frac{a}{b};$$
+    \item Additive inverse: $$\frac{a}{b} + \frac{-a}{b} = \frac{ab - ba}{b^2} = \frac{0}{b^2} \sim \frac{0}{1}\text{ (since } 0\cdot1 = b^2\cdot 0 \text{)};$$
+    \item Additive closure: $$\frac{a}{b} + \frac{c}{d} = \frac{ad+bc}{bd} \in \Q;$$
+\end{enumerate}
+\begin{enumerate}[label=M\arabic*.]
+    \item Multiplicative commutativity: $$\frac{a}{b} \cdot \frac{c}{d} = \frac{ac}{bd} = \frac{ca}{db} = \frac{c}{d} \cdot \frac{a}{b};$$
+    \item Multiplicative identity: $$\frac{a}{b} \cdot \frac{1}{1} = \frac{a\cdot 1}{b\cdot 1} = \frac{a}{b};$$
+    \item Multiplicative inverse: $$\frac{a}{b} \cdot \frac{b}{a} = \frac{ab}{ba} \sim \frac{1}{1} \text{ (since } ab\cdot 1 = ba\cdot 1 \text{)}; \text{and}$$
+    \item Multiplicative closure: $$\frac{a}{b} \cdot \frac{c}{d} = \frac{ac}{bd} \in \Q.$$
+\end{enumerate}
+We also need to check that addition and multiplication distribute correctly:
+\begin{align*}
+\frac{a}{b}\cdot\left(\frac{c}{d} + \frac{e}{f}\right) &=
+    \frac{a}{b}\cdot\frac{cf + de}{df} \\
+&= \frac{acf +ade}{bdf} \\
+&= \frac{abcf +abde}{b^2df} \\
+&= \frac{ac\cdot bf + bd\cdot ae}{bd\cdot bf} \\
+&= \frac{ac}{bd} + \frac{ae}{bf} \qed.
+\end{align*}
+
+\subsubsection{$\Q$ is ordered}
+We need to define what the ordering relation is on the rationals. The symbol ``$<$'' is borrowed from the integers but must be explicitly defined as it is now acting on equivalence classes of ordered pairs of integers:
+$$
+\frac{a}{b} < \frac{c}{d} \iff ad<bc
+$$
+In order for this definition to be an ordering it must satisfy trichotomy and transitivity. Let's look at the ordering of two rationals $\frac{a}{b}$ and $\frac{c}{d}$ by looking at the difference:
+$$
+\frac{c}{d} - \frac{a}{b} = \frac{cb - da}{db}
+\begin{cases}
+    = 0 & cb = da, \\
+    > 0 & cb - da > 0, \\
+    < 0 & cb - da < 0.
+\end{cases}
+$$
+Note that the above relied on the fact that our denominators are chosen from $\N$ and are therefore always positive. What about transitivity? Let's take as our assumption that $\frac{a}{b}<\frac{c}{d}$ and $\frac{c}{d}<\frac{e}{f}$, which using our definition for ordering implies that $ad<bc$ and $cf<de$ and thus we have:
+\begin{align*}
+    ad < bc &\implies adf < bcf \text{ since }d<0 \text{ and}\\
+    cf < de &\implies bcf < bde \text{ as above }.
+\end{align*}
+Since the ordering on the integers is transitive, we can now say
+$$
+adf < bde \implies af < be \implies \frac{a}{b} < \frac{e}{f}
+$$
+and hence the rationals are ordered.
+
 \subsection{$\Q$ extends $\Z$}
-\subsection{Ordering of $\Z$ is preserved}
+It would be nice if the integers in some way lined up with the rationals we have just created. One very natural way to do this would be to associate $n\in\Z$ with $\frac{n}{1} \in \Q$. Let's make this more formal and define a function $f:\Z \rightarrow \Q$ such that $f(n) = \frac{n}{1}$. If this function is to be of any use then we should expect certain things to be true, namely:
+\begin{enumerate}
+    \item $f(n) + f(m) = f(n+m)$; and
+    \item $f(n)\cdot f(m) = f(n\cdot m)$.
+\end{enumerate}
+Let's check each of these:
+$$
+f(n) + f(m) = \frac{n}{1} + \frac{m}{1} = \frac{n\cdot 1 + 1\cdot m}{1\cdot1}
+= \frac{n+m}{1} = f(n+m)\,; \text{ and}
+$$
+$$
+f(n)\cdot f(m) = \frac{n}{1}\cdot\frac{m}{1} = \frac{n\cdot m}{1\cdot 1}
+= \frac{n\cdot m}{1} = f(n\cdot m).
+$$
+The conditions above formally show that $f$ is a \textit{homomorphism} between $\Z$ and $\Q$. Furthermore, if we restrict $\Q$ to the set $\Z^* = \{\frac{n}{1}\,|\,n\in \Z\}$ (it is actually a group), we can say that $\Z$ is isomorphic to $\Z^*$. It is in this sense that the rationals extend the integers.
+
+\subsection{$\Q$ is an ordered field}
+Being a field with a well defined order is not enough to be an ordered field. We need the ordering to `behave' with the field operations i.e. $p<q \implies p+r<q+r$ and $p<q \implies pr<qr\, (r>0)$. Let's show addition first and let $p=\frac{a}{b}, q=\frac{c}{d}$ and $r=\frac{m}{n}$:
+\begin{align*}
+\frac{a}{b} < \frac{c}{d} &\implies ad < bc \\
+&\implies adn^2 < bcn^2 \\
+&\implies adn^2 + bdmn < bcn^2 + bdmn \\
+&\implies (an+bm)dn < bn(cn+dm) \\
+&\implies \frac{an+bm}{bn} < \frac{cn+dm}{dn} \\
+&\implies\frac{a}{b} + \frac{m}{n} < \frac{c}{d}+ \frac{m}{n} \qed.
+\end{align*}
+Multiplication also behaves:
+\begin{align*}
+\frac{a}{b} < \frac{c}{d} &\implies ad < bc \\
+&\implies admn < bcmn, \text{ since }mn>0 \\
+&\implies \frac{am}{dn} < \frac{cm}{dn} \qed.
+\end{align*}
 
 \section{What are the reals?}
 \subsection{Definition}
