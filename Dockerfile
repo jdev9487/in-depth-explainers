@@ -1,12 +1,14 @@
-FROM jdev9487/latex:latest
+FROM jdev9487/latex:latest as build
 
 WORKDIR /app
-
-COPY requirements.txt requirements.txt
-RUN pip3 install -r requirements.txt
 
 COPY . .
 
 RUN sh ./scripts/build-pdfs.sh
 
-CMD [ "python3", "-m" , "flask", "run", "--host=0.0.0.0"]
+FROM nginx
+
+COPY --from=build /app/output /www/media
+COPY ./nginx.conf /etc/nginx/nginx.conf
+
+CMD ["/usr/sbin/nginx", "-g", "daemon off;"]
