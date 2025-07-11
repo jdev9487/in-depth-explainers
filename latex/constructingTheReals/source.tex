@@ -319,7 +319,61 @@ Multiplication also behaves:
 
 \section{What are the reals?}
 \subsection{Definition}
+The real numbers are the set of all ``cuts'':
+$$
+\R = \{\alpha | \alpha \text{ is a cut}\}
+$$
+This obviously begs the question: ``what is a cut?'' A cut $\alpha$ is a subset of $\Q$ that obeys three conditions:
+\begin{enumerate}
+    \item (Non-trivial 1) $\alpha \neq \emptyset$;
+    \item (Non-trivial 2) $\alpha \neq \Q$;
+    \item (Closed below) If $p\in \alpha$, $q\in\Q$ and $q<p$, then $q\in\alpha$; and
+    \item (No largest element) There exists an element $q\in\alpha$ such that $p<q$ for all $p\in\alpha$.
+\end{enumerate}
+
 \subsection{$\R$ is an ordered field}
+\subsubsection{$\R$ is ordered}
+Define ordering on elements of the real numbers (cuts) as being a proper subset:
+$$
+\alpha < \beta \implies \alpha \subsetneq \beta.
+$$
+Definitions of orderings must satisfy trichotomy and transitivity:
+\begin{enumerate}
+    \item Trichotomy. Assume that neither $\alpha \subset \beta$ nor $\alpha = \beta$ is true. It will be enough to show that this implies that $\beta \subset \alpha$ and hence at least one of the trichotomy scenarios is upheld (we will still have to show that not more than one is held):
+    $$
+    \alpha \subsetneq \beta \AND \alpha \neq \beta 
+        \implies \text{ there exists an } x \in \alpha \text{ such that } x \notin \beta.
+    $$
+    By the contrapositive of the the `closed below' axiom for a cut:
+    $$
+        x \notin \beta \implies b\leq x
+    $$
+    for all $b \in \beta$. Therefore, for any element $x$ which is in $\alpha$ but not it $\beta$, all elements in $\beta$ will be less than it, i.e. $b<x$ for all $b \in \beta$. But since $x\in\alpha$, $b\in\beta \implies b \in \alpha$, which in turn implies that $\beta \subsetneq \alpha$ and at least one of the trichotomy scenarios is established.
+    \item Transitivity. Assume $\alpha < \beta$ and $\beta < \gamma$ with $\alpha, \beta, \gamma \in \R$, which in turn implies $\alpha \subsetneq \beta$ and $\beta \subsetneq \gamma$. Hence
+    \begin{align*}
+        \alpha < \beta &\implies \alpha \subsetneq \beta \\
+        &\implies \alpha \subsetneq \gamma \\
+        &\implies \alpha < \gamma.
+    \end{align*}
+\end{enumerate}
+\subsubsection{Operations in $\R$}
+Before defining addition and multiplication, two important cuts need to be defined; the additive identity:
+$$
+0^* = \{q \in \Q\,|\,q<0\},
+$$
+and the multiplicative identity:
+$$
+1^* = \{q \in \Q\,|\,q<1\}.
+$$
+Both are clearly non-trivial, closed below and have no largest element and so are indeed elements of $\R$, that is, cuts. Now we can define addition as
+$$
+\alpha + \beta = \{p \in \Q\,|\,p<a+b \text{ such that }a\in\alpha, b\in\beta\}
+$$
+and define multiplication as
+$$
+\alpha \cdot \beta = \{p \in \Q\,|\,p<a\cdot b \text{ such that }a\in\alpha, b\in\beta\}.
+$$
+
 \subsection{$\R$ extends $\Q$}
 \subsection{Ordering of $\Q$ is preserved}
 
