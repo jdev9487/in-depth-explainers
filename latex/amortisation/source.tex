@@ -1,0 +1,166 @@
+\documentclass[]{scrartcl}
+
+\setkomafont{disposition}{\normalfont\bfseries}
+
+\author{jdev9487}
+\title{Amortisation}
+\subtitle{How standard loan repayment amounts are calculated}
+
+\usepackage{array,epsfig}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amsxtra}
+\usepackage{amsthm}
+\usepackage{mathrsfs}
+\usepackage{color}
+
+\theoremstyle{definition}
+\newtheorem{defn}{Definition}
+\newtheorem{thm}{Theorem}
+\newtheorem{cor}{Corollary}
+\newtheorem*{rmk}{Remark}
+\newtheorem{lem}{Lemma}
+\newtheorem{ex}{Example}
+\newtheorem*{soln}{Solution}
+\newtheorem{prop}{Proposition}
+
+\renewcommand{\sec}[1]{\S \ref{#1}}
+\newcommand{\lra}{\longrightarrow}
+\newcommand{\ra}{\rightarrow}
+\newcommand{\surj}{\twoheadrightarrow}
+\newcommand{\graph}{\mathrm{graph}}
+\newcommand{\bb}[1]{\mathbb{#1}}
+\newcommand{\Z}{\bb{Z}}
+\newcommand{\Q}{\bb{Q}}
+\newcommand{\R}{\bb{R}}
+\newcommand{\C}{\bb{C}}
+\newcommand{\N}{\bb{N}}
+\newcommand{\M}{\mathbf{M}}
+\newcommand{\m}{\mathbf{m}}
+\newcommand{\MM}{\mathscr{M}}
+\newcommand{\HH}{\mathscr{H}}
+\newcommand{\Om}{\Omega}
+\newcommand{\Ho}{\in\HH(\Om)}
+\newcommand{\bd}{\partial}
+\newcommand{\del}{\partial}
+\newcommand{\bardel}{\overline\partial}
+\newcommand{\textdf}[1]{\textbf{\textsf{#1}}\index{#1}}
+\newcommand{\img}{\mathrm{img}}
+\newcommand{\ip}[2]{\left\langle{#1},{#2}\right\rangle}
+\newcommand{\inter}[1]{\mathrm{int}{#1}}
+\newcommand{\exter}[1]{\mathrm{ext}{#1}}
+\newcommand{\cl}[1]{\mathrm{cl}{#1}}
+\newcommand{\ds}{\displaystyle}
+\newcommand{\vol}{\mathrm{vol}}
+\newcommand{\cnt}{\mathrm{ct}}
+\newcommand{\osc}{\mathrm{osc}}
+\newcommand{\LL}{\mathbf{L}}
+\newcommand{\UU}{\mathbf{U}}
+\newcommand{\support}{\mathrm{support}}
+\newcommand{\AND}{\;\wedge\;}
+\newcommand{\OR}{\;\vee\;}
+\newcommand{\Oset}{\varnothing}
+\newcommand{\st}{\ni}
+\newcommand{\wh}{\widehat}
+\let\oldref\ref
+\renewcommand{\ref}[1]{(\oldref{#1})}
+
+\setlength{\topmargin}{-.3 in}
+\setlength{\oddsidemargin}{0in}
+\setlength{\evensidemargin}{0in}
+\setlength{\textheight}{9.in}
+\setlength{\textwidth}{6.5in}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+\pagebreak
+
+\section{Introduction}
+Taking on debt usually involves making repayments over a pre-determined length of time. The lender (e.g. a bank) gives the borrower (e.g. a prospective home owner) a certain amount of money that will gets repaid at the end of the agreed upon time period (every month, perhaps). During this time period, interest will have been charged on the amount of debt outstanding. In order for the debt to come down, the amount the borrower repays must be greater than the interest accrued during the time period.
+
+Mortgages almost always work by the borrower repaying a fixed amount of money each month. At the end of a 30 year mortgage, the 360 monthly repayments will be just the correct amount so that the debt is precisely equal to £0. But how much should that repayment amount be? Too much and the loan will be cleared before 30 years. Too little and the loan will either be cleared after 30 years or it will never clear with the borrower's debt spiralling out of control.
+
+\section{How does a loan work?}
+Let's continue to use the mortgage example from above. The bank lends you (the borrower) £$100,000$. This is called \textit{principal} debt. At the end of the month, the bank charges interest on this principal debt based on the APR (Annual Percentage Rate) - let's say it is $12$\%. There are other ways to do this, but it is common that this annual rate is divided by the number of months in a year to get the \textit{period interest rate} of $1$\%. This means that the bank will charge $1$\% of your principal debt as interest - at the end of the first month, the interest charged will be £$1,000$.
+
+With a monthly repayment amount of £$1,028.61$, the interest debt of £$1,000$ is cleared and so is £$28.61$ of principal debt. This leaves the principal debt at £$99, 971.39$. $1$\% of this is £$999.71$ and so at the end of the second month, the same repayment of £$1028.61$ now clears £$1,028.61$ - £$999.71$ = £$28.90$. Note that this was ever so slightly more principal clearance than the first month.
+
+This principal clearance becomes larger as the loan progresses. By choosing a particular repayment amount it is possible to ensure that the principal debt is precisely £$0$ by the end of the 360 month mortgage term.
+
+\section{A model}\label{sec:a-model}
+Let's formalise the procedure from the previous section to see how the principal debt changes after each repayment. First, some symbols will be needed:
+\begin{itemize}
+    \item $P_i$: the principal debt after $i$ months ($P_0$ is the original loan amount);
+    \item $r$: the period rate of interest (often the APR divided by 12);
+    \item $n$: the number of repayment periods; and
+    \item $M$: the monthly repayment amount.
+\end{itemize}
+
+So what happens at the end of the first repayment cycle? Interest it charged and then the repayment is made. Whatever remains is the new value for the principal debt ($P_1$):
+\[
+    P_0(1 + r) - M = P_1.
+\]
+What about after 2 months? We apply the same procedure for the new principal debt, $P_1$:
+\begin{align*}
+    P_1(1 + r) - M &= P_2 \\
+    (P_0(1 + r) - M)(1 + r) - M &= P_2 \\
+    P_0(1 + r)^2 - M[1 + (1 + r)] &= P_2
+\end{align*}
+
+If we continue with this procedure, we get
+\begin{align*}
+    P_3 &= P_0(1+r)^3 - M[1 + (1+r) + (1+r)^2] \\
+    P_4 &= P_0(1+r)^4 - M[1 + (1+r) + (1+r)^2 + (1+r)^3] \\
+    P_5 &= P_0(1+r)^5 - M[1 + (1+r) + (1+r)^2 + (1+r)^3 + (1+r)^4] \\
+    \vdots
+\end{align*}
+
+We may be tempted to assume that we can write the following:
+\begin{equation}\label{eqn:i-thPrincipalDebt}
+    P_i = P_0(1+r)^i - M\sum_{j=0}^{i-1}(1+r)^j.
+\end{equation}
+This is true, but requires justification (see Appendix \ref{appendix:principal-debt}). Fast forward to the end of the loan, we \textit{require} that $P_n = 0$:
+\[
+    P_n = P_0(1+r)^n - M\sum_{j=0}^{n-1}(1+r)^j = 0.
+\]
+Rearranging for the \textit{constant} repayment amount $M$ gives:
+\[
+    M = \frac{P_0(1+r)^n}{\sum_{j=0}^{n-1}(1+r)^j}.
+\]
+The denominator is a geometric progression. A generic geometric progression 
+\[
+    \sum_{i=0}^{n}s^i = \frac{1 - s^{n+1}}{1 - s},
+\]
+see Appendix \ref{appendix:geo-sum-proof}. Taking care of the limits of the sum and the variables used, we arrive at our formula for $M$:
+\begin{equation}
+    M = \frac{rP_0(1+r)^n}{(1+r)^n - 1},
+\end{equation}
+with the algebraic details left as an exercise for the reader.
+
+\appendix
+\section{$i^{\textrm{th}}$ principal debt proof}\label{appendix:principal-debt}
+\sec{sec:a-model} provided us with the method for charging interest and it obeyed the relation
+\begin{equation}\label{eqn:principal-debt-relation}
+    P_{i+1} = P_i(1 + r) - M.
+\end{equation}
+We can proceed by induction to prove that equation \ref{eqn:i-thPrincipalDebt} is correct.
+\begin{proof}
+    Base case ($i = 0$): $P_1 = P_0 (1 + r) - M$.
+    Inductive step: assume equation \ref{eqn:i-thPrincipalDebt} holds for $i = k$. Now consider $i = k+1$.
+    \begin{align}
+        P_{k+1} &= P_k (1 + r) - M \\
+        P_{k+1} &= \left[P_0(1+r)^k - M\sum_{j=0}^{k-1}(1+r)^j\right] (1 + r) - M \\
+        P_{k+1} &= P_0(1+r)^{k+1} - M\left[\sum_{j=0}^{k-1}(1+r)^{j+1} + 1\right] \\
+        P_{k+1} &= P_0(1+r)^{k+1} - M\left[\sum_{j=1}^{k}(1+r)^{j} + 1\right] \\
+        P_{k+1} &= P_0(1+r)^{k+1} - M\sum_{j=0}^{k}(1+r)^{j}
+    \end{align}
+    as required. This proves equation \ref{eqn:i-thPrincipalDebt} is correct.
+\end{proof}
+
+\section{Geometric progression sum proof}\label{appendix:geo-sum-proof}
+
+\end{document}
