@@ -1,4 +1,5 @@
-FROM jdev9487/latex:latest as build
+# FROM jdev9487/latex:latest as build
+FROM kjarosh/latex:2025.1-medium as build
 
 WORKDIR /app
 

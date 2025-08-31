@@ -3,7 +3,7 @@ for path in latex/**
 do
     latexSource=$path/source.tex
     directoryName=$(basename -- "$path")
-    pdflatex $latexSource
+    latexmk -pdf $latexSource
     mv source.pdf output/$directoryName.pdf
-    rm source.aux source.log source.toc
+    rm source.*
 done
